@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Why café lines explode at 90% busy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* ── PAGE CONCEPTS and page CSS: one colour per idea, named for the idea, then this page's own rules. Replace for every topic. ── */
+:root {
+  --c-arrive: light-dark(oklch(54% 0.16 252), oklch(74% 0.12 252));
+  --c-serve:  light-dark(oklch(54% 0.11 178), oklch(77% 0.10 178));
+  --c-busy:   light-dark(oklch(64% 0.16 60),  oklch(80% 0.13 70));
+  --c-wait:   light-dark(oklch(55% 0.20 352), oklch(74% 0.15 352));
+}
+.c-arrive { --k: var(--c-arrive); } .c-serve { --k: var(--c-serve); }
+.c-busy { --k: var(--c-busy); }     .c-wait { --k: var(--c-wait); }
+/* Fig. 1: the people in line that the model switches on */
+svg .q-p { transition: opacity .25s; }
+svg .q-p:not(.on) { opacity: 0; }
+/* Fig. 4: the rows regroup when the toggle flips */
+figure[data-state="after"] .row-a { transform: translateY(60px); }
+figure[data-state="after"] .row-b { transform: translateY(-60px); }
+figure[data-state="before"] .row-s { transform: translateX(-40px); }
+
+/* ── ELI15 KIT: keep from here to the end of the style block. ── */
+:root {
+  color-scheme: light dark;
+  --bg:      light-dark(oklch(98.3% 0.007 85), oklch(18.5% 0.012 260));
+  --surface: light-dark(oklch(100% 0 0),       oklch(22.5% 0.014 260));
+  --sunk:    light-dark(oklch(95.4% 0.010 85), oklch(15.8% 0.010 260));
+  --ink:     light-dark(oklch(22% 0.02 265),   oklch(94% 0.008 85));
+  --ink-2:   light-dark(oklch(40% 0.02 265),   oklch(81% 0.010 85));
+  --ink-3:   light-dark(oklch(56% 0.015 265),  oklch(65% 0.012 85));
+  --line:    light-dark(oklch(89% 0.010 85),   oklch(32% 0.014 260));
+  --line-2:  light-dark(oklch(78% 0.012 85),   oklch(46% 0.014 260));
+  /* status: only for right / caution / wrong, never for a concept */
+  --ok:   light-dark(oklch(52% 0.13 150), oklch(76% 0.13 150));
+  --warn: light-dark(oklch(60% 0.14 80),  oklch(82% 0.13 85));
+  --risk: light-dark(oklch(54% 0.20 28),  oklch(72% 0.16 28));
+  --k: var(--ink-2);
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --text: 68ch;
+  --wide: 1120px;
+  --r: 14px;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"]  { color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 1.125rem/1.62 var(--font-body); }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 650; line-height: 1.12; letter-spacing: -0.012em; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(2.3rem, 5.2vw, 3.7rem); font-variation-settings: "opsz" 144; }
+h2 { font-size: clamp(1.7rem, 3.2vw, 2.25rem); font-variation-settings: "opsz" 96; margin-bottom: 1rem; }
+h3 { font-size: 1.2rem; margin-bottom: .4rem; }
+p { margin: 0 0 1rem; text-wrap: pretty; }
+a { color: inherit; text-decoration-color: var(--line-2); text-underline-offset: 3px; }
+b, strong { font-weight: 600; }
+.num { font-family: var(--font-mono); font-weight: 500; font-variant-numeric: tabular-nums; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* layout: text at reading width, figures break out to --wide */
+.page { display: grid; padding-bottom: 5rem;
+  grid-template-columns:
+    [full-start] minmax(16px, 1fr)
+    [wide-start] minmax(0, calc((var(--wide) - var(--text)) / 2))
+    [text-start] min(var(--text), 100% - 32px) [text-end]
+    minmax(0, calc((var(--wide) - var(--text)) / 2)) [wide-end]
+    minmax(16px, 1fr) [full-end]; }
+.page > *, .page > section > * { grid-column: text; }
+.page > section { grid-column: full; display: grid; grid-template-columns: subgrid; padding-top: 4.5rem; }
+.page > .wide, .page > section > .wide { grid-column: wide; }
+
+/* header */
+.page-head { padding-top: clamp(3rem, 8vw, 5.5rem); }
+.eyebrow { font: 600 .78rem/1.3 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); margin-bottom: .9rem; }
+.lead { font-size: clamp(1.2rem, 2.2vw, 1.4rem); line-height: 1.5; color: var(--ink-2); margin-top: 1.25rem; max-width: 60ch; }
+.meta { font-size: .875rem; color: var(--ink-3); margin-top: 1rem; }
+
+/* coloured terms: the same hue as that idea in every figure */
+.term { color: var(--k); font-weight: 600; }
+.ref { color: var(--k); font-weight: 600; text-decoration: underline 2px color-mix(in oklch, var(--k) 45%, transparent); text-underline-offset: 4px; cursor: help; border-radius: 3px; }
+.ref:focus-visible { outline: 2px solid var(--k); outline-offset: 2px; }
+
+/* figures */
+figure { margin: 2.25rem 0 1rem; }
+.fig { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: clamp(14px, 2.4vw, 28px); }
+.frame { overflow-x: auto; }
+.frame > svg, .fig svg { display: block; width: 100%; height: auto; }
+.frame > svg { min-width: var(--min, 0px); }
+figcaption { font-size: .9375rem; line-height: 1.5; color: var(--ink-2); margin-top: 1rem; max-width: var(--text); }
+.fig-n { font: 600 .72rem var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-right: .55em; }
+.hero-grid { display: grid; grid-template-columns: 480fr 460fr; gap: clamp(16px, 3vw, 36px); align-items: end; }
+.try { font-size: .9375rem; color: var(--ink-2); margin: .75rem 0 0; }
+.try b { font: 600 .7rem var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); margin: 0 .35em 0 .15em; }
+
+/* svg vocabulary */
+svg text { font-family: var(--font-body); font-size: 15px; fill: var(--ink-2); }
+svg .t-s { font-size: 13px; }
+svg .t-b { font-weight: 600; fill: var(--ink); }
+svg .t-big { font-family: var(--font-display); font-size: 46px; font-weight: 650; }
+svg .t-num { font-family: var(--font-mono); font-weight: 500; }
+svg .t-cap { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .09em; text-transform: uppercase; fill: var(--ink-3); }
+svg .k { fill: var(--k); }
+svg .fk { fill: var(--k); }
+svg .sk { stroke: var(--k); fill: none; }
+svg .tk { fill: color-mix(in srgb, var(--k) 14%, var(--surface)); stroke: var(--k); stroke-width: 1.5; }
+svg .ax { stroke: var(--line-2); stroke-width: 1.5; fill: none; }
+svg .gr { stroke: var(--line); stroke-dasharray: 3 5; fill: none; }
+svg .guide { stroke: var(--k); stroke-width: 1.5; stroke-dasharray: 4 4; fill: none; opacity: .7; }
+svg .ln { stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+svg .sunk { fill: var(--sunk); stroke: var(--line-2); stroke-width: 1.5; }
+svg .dim line { stroke: var(--k); stroke-width: 1.5; }
+svg [data-ref] { transition: opacity .25s; }
+
+/* paired bars in HTML: they reflow on a phone and keep body-size text */
+.bars { display: grid; gap: 1.1rem; }
+.bars-ref { margin: 0 0 -.6rem calc(7.5rem + (100% - 7.5rem) * var(--ref)); font: 600 .7rem var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
+.bar-grp { display: grid; grid-template-columns: 6.5rem 1fr; gap: 1rem; align-items: center; }
+.bar-name { margin: 0; font-weight: 600; line-height: 1.2; }
+.bar-name b { display: block; font: 600 1.3rem/1.3 var(--font-mono); color: var(--k); }
+.bar-track { position: relative; display: grid; gap: .35rem; }
+.bar-track::before { content: ""; position: absolute; left: calc(var(--ref) * 100%); top: -.35rem; bottom: -.35rem; border-left: 1.5px dashed var(--line-2); }
+.bar { width: calc(var(--w) * 100%); height: 1.8rem; border-radius: 5px; padding: 0 .6rem; font: 500 .85rem/1.8rem var(--font-mono); white-space: nowrap; transition: width 1s var(--ease); }
+.bar.was { background: color-mix(in srgb, var(--k) 14%, var(--surface)); box-shadow: inset 0 0 0 1.5px var(--k); }
+.bar.now { background: var(--k); color: var(--surface); }
+.js .grow:not(.seen) .bar.now { width: calc(var(--ref) * 100%); }
+.fig:has(.hl) [data-ref]:not(.hl) { opacity: .25; }
+
+/* stepper: the default (no JS, print) is the finished picture */
+.js .stepper [data-s] { transition: opacity .45s var(--ease), transform .45s var(--ease), stroke-dashoffset 1.1s linear; transform-box: fill-box; }
+.js .stepper [data-s]:not(.on) { opacity: 0; transform: translateY(8px); }
+.js .stepper .draw { stroke-dasharray: 1; stroke-dashoffset: 0; }
+.js .stepper .draw:not(.on) { stroke-dashoffset: 1; transform: none; }
+.js .stepper.no-anim [data-s] { transition: none; }
+/* a part with a range (data-s="2-3") leaves before the end, so the no-JS picture drops it */
+html:not(.js) .stepper [data-s*="-"] { display: none; }
+
+/* before / after: the markup's data-state is what no-JS and print show */
+.only-before, .only-after { transition: opacity .45s var(--ease), transform .55s var(--ease); transform-box: fill-box; }
+figure[data-state="before"] .only-after, figure[data-state="after"] .only-before { opacity: 0; }
+.tok { opacity: 0; transition: opacity .2s; }
+.tok.run { opacity: 1; }
+.step-caps { list-style: none; counter-reset: s; padding: 0; margin: 1.1rem 0 0; display: grid; gap: .45rem; max-width: var(--text); }
+.step-caps li { counter-increment: s; display: grid; grid-template-columns: 1.75rem 1fr; gap: .7rem; align-items: start; font-size: 1rem; line-height: 1.5; color: var(--ink-2); }
+.step-caps li::before { content: counter(s); font: 600 .78rem/1.6rem var(--font-mono); text-align: center; height: 1.6rem; border-radius: 50%; border: 1.5px solid var(--line-2); color: var(--ink-3); }
+.js .step-caps li { cursor: pointer; opacity: .5; transition: opacity .3s; }
+.js .step-caps li.past { opacity: .72; }
+.js .step-caps li.now { opacity: 1; color: var(--ink); }
+.js .step-caps li.now::before { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.player { display: none; }
+.js .player { display: flex; align-items: center; gap: .5rem; margin-top: 1.1rem; }
+.player input[type="range"] { flex: 1; min-width: 80px; accent-color: var(--ink); }
+.player .count { font: 500 .85rem var(--font-mono); color: var(--ink-3); min-width: 3.2rem; text-align: right; }
+
+/* buttons and controls (JS only: without JS the page shows the default state) */
+.btn { font: 500 .9375rem/1 var(--font-body); color: var(--ink); background: var(--surface); border: 1px solid var(--line-2); border-radius: 999px; padding: .6rem 1rem; cursor: pointer; transition: background .2s, border-color .2s, color .2s; }
+.btn:hover { border-color: var(--ink-3); }
+.btn:focus-visible, input:focus-visible, summary:focus-visible, figure:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.btn[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.btn[aria-disabled="true"] { opacity: .35; cursor: default; }
+.btn.icon { width: 2.4rem; height: 2.4rem; padding: 0; font-size: 1.25rem; display: grid; place-items: center; }
+.controls, .seg, .choices, .tools { display: none; }
+.js .controls { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1.5rem; margin-top: 1.25rem; }
+.js .seg { display: inline-flex; flex-wrap: wrap; gap: .4rem; margin-bottom: 1rem; }
+.slider { display: flex; align-items: center; gap: .9rem; flex: 1 1 320px; font-weight: 500; }
+.slider input { flex: 1; accent-color: var(--k); min-width: 120px; }
+.slider output { font: 600 1.15rem var(--font-mono); color: var(--k); min-width: 3.6ch; text-align: right; }
+.readout { font-size: 1.2rem; line-height: 1.5; margin: 1rem 0 0; max-width: var(--text); }
+.readout b { font-family: var(--font-mono); font-weight: 600; }
+.tools { position: fixed; top: 12px; right: 12px; z-index: 10; gap: .4rem; }
+.js .tools { display: flex; }
+.tools .btn { padding: .5rem .8rem; font-size: .8rem; }
+
+/* terms strip */
+.terms { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; margin: 2.5rem 0 0; }
+.terms > div { background: var(--surface); padding: 1rem 1.15rem; }
+.terms dt { font-weight: 600; color: var(--k); display: flex; align-items: center; gap: .5rem; }
+.terms dt::before { content: ""; width: .7rem; height: .7rem; border-radius: 50%; background: var(--k); flex: none; }
+.terms dd { margin: .25rem 0 0; font-size: .9375rem; line-height: 1.45; color: var(--ink-2); }
+
+/* notes: typed callouts */
+:where(.note) { --k: var(--ink-2); }
+.note { background: color-mix(in srgb, var(--k) 7%, var(--surface)); border: 1px solid color-mix(in srgb, var(--k) 30%, var(--line)); border-radius: var(--r); padding: 1.1rem 1.3rem; margin: 1.75rem 0; }
+.note p:last-child { margin-bottom: 0; }
+.tag { display: block; font: 600 .72rem/1.2 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--k); margin-bottom: .45rem; }
+/* a key note takes the colour of the concept it is about: class="note key c-wait" */
+:where(.note.key) { --k: var(--ink); }
+.note.key { border-width: 1.5px; }
+.note.key .tag { color: var(--k); }
+.note.myth { --k: var(--risk); }
+.note.watch { --k: var(--warn); }
+.note .fact { --k: var(--ok); color: var(--ok); margin-top: .9rem; }
+.note.myth > p:first-of-type { text-decoration: line-through; text-decoration-color: color-mix(in oklch, var(--risk) 60%, transparent); text-decoration-thickness: 2px; }
+
+/* predict, then reveal */
+.predict { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 1.25rem 1.35rem; margin: 1.75rem 0; }
+.predict .q { font-size: 1.1rem; margin-bottom: 1rem; }
+.js .choices { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+.choices .btn { font-family: var(--font-mono); }
+.answered .choices .right { background: var(--ok); border-color: var(--ok); color: var(--surface); }
+.answered .choices .picked:not(.right) { text-decoration: line-through; border-color: var(--risk); color: var(--risk); }
+.answered .choices .btn[aria-pressed="true"].right::after { content: "  ✓"; }
+
+details { border-top: 1px solid var(--line); padding-top: .8rem; }
+details + details { margin-top: .6rem; }
+summary { cursor: pointer; font-weight: 600; list-style: none; display: flex; align-items: center; gap: .55rem; }
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "+"; font: 600 1rem/1.3rem var(--font-mono); width: 1.4rem; height: 1.4rem; text-align: center; border-radius: 50%; border: 1.5px solid var(--line-2); color: var(--ink-3); flex: none; transition: transform .2s; }
+details[open] > summary::before { content: "−"; }
+details > :not(summary) { margin-top: .75rem; }
+.page > section > details { margin-top: 1.5rem; }
+math { font-size: 1.2em; }
+
+/* lists that carry structure */
+.limits { list-style: none; padding: 0; margin: 1.5rem 0; display: grid; gap: .9rem; }
+.limits li { display: grid; grid-template-columns: auto 1fr; gap: .8rem; }
+.limits li::before { content: "↯"; font: 600 1rem/1.6 var(--font-mono); color: var(--warn); }
+
+/* recap */
+.recap-box { background: var(--ink); color: var(--bg); border-radius: calc(var(--r) + 4px); padding: clamp(1.5rem, 4vw, 2.5rem); }
+.recap-box .eyebrow { color: color-mix(in oklch, var(--bg) 65%, var(--ink)); }
+.recap-box h2 { color: var(--bg); }
+.recap-box ol { margin: 0; padding-left: 1.3rem; display: grid; gap: .6rem; font-size: 1.1rem; }
+.recap-box ol li::marker { font: 600 .9rem var(--font-mono); }
+.recap-box .next { margin: 1.5rem 0 0; padding-top: 1.1rem; border-top: 1px solid color-mix(in oklch, var(--bg) 25%, var(--ink)); }
+.sources { font-size: .875rem; color: var(--ink-3); }
+.sources ul { padding-left: 1.1rem; }
+
+/* motion off: reduced-motion users and the page-wide pause */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+.motion-off *, .motion-off *::before, .motion-off *::after { animation: none !important; transition: none !important; }
+
+@media (max-width: 760px) {
+  body { font-size: 1.0625rem; }
+  .page > section { padding-top: 3.25rem; }
+  .frame > svg { min-width: var(--min-phone, var(--min, 0px)); }
+  .hero-grid { grid-template-columns: 1fr; }
+  /* wide figures go edge to edge on a phone: every pixel of width is label size */
+  .page > .fig.wide, .page > section > .fig.wide { grid-column: full; border-radius: 0; border-inline: 0; padding: 14px 8px; }
+  .fig.wide > :not(.frame, .hero-grid) { margin-inline: 8px; }
+}
+@media print {
+  :root { color-scheme: light; }
+  body { background: #fff; font-size: 11pt; }
+  .tools, .player, .controls, .seg, .choices { display: none !important; }
+  .tok { display: none; }
+  figure, .note, .predict, .recap-box { break-inside: avoid; }
+  header + figure { break-inside: auto; } /* the hero starts on page 1 */
+  .page > section { padding-top: 2rem; }
+  * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+<div class="tools" role="toolbar" aria-label="Page controls">
+  <button type="button" class="btn" data-action="motion" aria-pressed="false">Pause motion</button>
+  <button type="button" class="btn" data-action="theme">Light / dark</button>
+</div>
+
+<main class="page">
+  <header class="page-head">
+    <p class="eyebrow">Queues · why waiting is not linear</p>
+    <h1>A café line explodes when the barista is <span class="term c-busy">90% busy</span></h1>
+    <p class="lead">The <span class="term c-wait">wait</span> does not grow in step with how busy the barista is. It grows with <em>busy ÷ spare</em>, so the last few points of load cost the most: 8 minutes at 80% busy, 18 at 90%.</p>
+    <p class="meta">Model: one barista, customers and drink times both random (the M/M/1 queue), 2-minute average drink. All numbers are long-run averages.</p>
+  </header>
+
+  <figure class="fig wide" id="hero" aria-describedby="hero-cap">
+    <div class="hero-grid">
+      <svg viewBox="0 0 480 260" role="img" aria-label="The café: customers walk in from the door on the left, wait in line, and the barista on the right serves them. At 80% busy the line holds about 3 people.">
+        <defs><g id="pp"><circle cy="-21" r="7.5"/><rect x="-9" y="-11" width="18" height="29" rx="8"/></g></defs>
+        <line class="ax" x1="0" y1="220" x2="480" y2="220"/>
+        <rect class="sunk" x="6" y="96" width="42" height="124" rx="4"/>
+        <circle cx="40" cy="160" r="2.5" fill="var(--line-2)"/>
+        <text class="k c-arrive" id="q-rate" x="6" y="80">0.40 arrive / min</text>
+        <g class="c-wait" data-ref="line">
+          <use href="#pp" class="q-p fk on" x="330" y="202"/><use href="#pp" class="q-p fk on" x="306" y="202"/><use href="#pp" class="q-p fk on" x="282" y="202"/><use href="#pp" class="q-p fk" x="258" y="202"/><use href="#pp" class="q-p fk" x="234" y="202"/><use href="#pp" class="q-p fk" x="210" y="202"/><use href="#pp" class="q-p fk" x="186" y="202"/><use href="#pp" class="q-p fk" x="162" y="202"/><use href="#pp" class="q-p fk" x="138" y="202"/><use href="#pp" class="q-p fk" x="114" y="202"/><use href="#pp" class="q-p fk" x="90" y="202"/><use href="#pp" class="q-p fk" x="66" y="202"/>
+          <text class="t-s k" id="q-more" x="56" y="160" opacity="0">+0 more outside</text>
+          <text class="t-s k" id="q-none" x="330" y="200" text-anchor="end" opacity="0">no line</text>
+          <g class="dim" id="q-dim"><line id="q-dl" x1="270" y1="238" x2="342" y2="238"/><line id="q-t1" x1="270" y1="232" x2="270" y2="244"/><line x1="342" y1="232" x2="342" y2="244"/>
+            <text class="t-s k" id="q-dt" x="306" y="256" text-anchor="middle">3.2 people waiting, on average</text></g>
+        </g>
+        <g class="c-serve" data-ref="barista">
+          <use href="#pp" class="fk" x="423" y="160"/>
+          <rect class="tk" x="372" y="168" width="102" height="52" rx="8"/>
+          <text class="t-b k" x="423" y="190" text-anchor="middle">barista</text>
+          <text class="t-s" x="423" y="208" text-anchor="middle">2 min a drink</text>
+          <rect id="cup" class="fk" x="446" y="153" width="12" height="15" rx="2.5" opacity="0"/>
+        </g>
+        <g class="c-busy">
+          <circle cx="423" cy="84" r="17" fill="none" stroke="var(--line)" stroke-width="6"/>
+          <circle id="gauge" class="sk" cx="423" cy="84" r="17" stroke-width="6" pathLength="1" stroke-dasharray="1" stroke-dashoffset="0.2" transform="rotate(-90 423 84)" style="transition: stroke-dashoffset .4s var(--ease)"/>
+          <text class="k" id="gauge-t" x="423" y="52" text-anchor="middle">busy 80%</text>
+        </g>
+        <circle id="arrival" class="fk c-arrive" cx="27" cy="196" r="7" opacity="0"/>
+      </svg>
+      <svg viewBox="0 0 460 300" role="img" aria-label="Chart: average wait in minutes against how busy the barista is. Flat until about 70%, then steep: 8 minutes at 80%, 18 at 90%, 38 at 95%.">
+        <line class="gr" x1="60" y1="187.5" x2="440" y2="187.5"/><line class="gr" x1="60" y1="135" x2="440" y2="135"/><line class="gr" x1="60" y1="82.5" x2="440" y2="82.5"/><line class="gr" x1="60" y1="30" x2="440" y2="30"/>
+        <path class="ax" d="M60,30 V240 H440"/>
+        <g class="t-s t-num" text-anchor="end"><text x="50" y="245">0</text><text x="50" y="192">10</text><text x="50" y="140">20</text><text x="50" y="87">30</text><text x="50" y="35">40</text></g>
+        <g class="t-s t-num" text-anchor="middle"><text x="60" y="264">0%</text><text x="155" y="264">25%</text><text x="250" y="264">50%</text><text x="345" y="264">75%</text><text x="440" y="264">100%</text></g>
+        <text class="t-s k c-busy" x="250" y="290" text-anchor="middle">how busy the barista is</text>
+        <text class="t-s k c-wait" x="60" y="16">average wait, minutes</text>
+        <g class="c-wait" data-ref="wait">
+          <path class="ln sk" d="M60.0,240.0 L79.0,239.4 L98.0,238.8 L117.0,238.1 L136.0,237.4 L155.0,236.5 L174.0,235.5 L193.0,234.3 L212.0,233.0 L231.0,231.4 L250.0,229.5 L269.0,227.2 L288.0,224.2 L295.6,222.9 L303.2,221.3 L310.8,219.6 L318.4,217.7 L326.0,215.5 L333.6,213.0 L341.2,210.1 L348.8,206.7 L356.4,202.8 L364.0,198.0 L371.6,192.2 L379.2,184.9 L386.8,175.5 L388.7,172.7 L390.6,169.7 L392.5,166.5 L394.4,163.0 L396.3,159.2 L398.2,155.0 L400.1,150.5 L402.0,145.5 L403.9,140.0 L405.8,133.8 L407.7,127.0 L409.6,119.2 L411.5,110.5 L413.4,100.5 L415.3,89.0 L417.2,75.5 L419.1,59.6 L421.0,40.5 L421.9,30.0"/>
+          <line class="guide" id="gx" x1="364" y1="198" x2="364" y2="240"/>
+          <line class="guide" id="gy" x1="60" y1="198" x2="364" y2="198"/>
+          <circle id="mk" class="fk" cx="364" cy="198" r="7.5" stroke="var(--surface)" stroke-width="3"/>
+          <text id="mk-t" class="t-b t-num k" x="350" y="184" text-anchor="end">8 min</text>
+        </g>
+      </svg>
+    </div>
+    <div class="controls">
+      <label class="slider c-busy">How busy is the barista?<input id="busy" type="range" min="10" max="95" step="1" value="80" aria-describedby="hero-read"><output id="busy-out" for="busy">80%</output></label>
+    </div>
+    <p class="readout" id="hero-read" aria-live="polite">At <b class="term c-busy" id="s-busy">80%</b> busy, the line holds <b class="term c-wait" id="s-line">3.2</b> <span id="s-noun">people</span> and each customer waits <b class="term c-wait" id="s-wait">8</b> minutes before ordering.</p>
+    <p class="try"><b>Try</b>drag from 50% to 90%. <b>Notice</b>the load grows 1.8 times; the wait grows 9 times, from 2 to 18 minutes.</p>
+    <figcaption id="hero-cap"><span class="fig-n">Fig. 1</span>Average wait against how busy the barista is. The curve stays flat until about 70%, then climbs: 8 minutes at 80%, 18 at 90%, 38 at 95%. The café on the left shows the average <span class="ref c-wait" data-ref="line" tabindex="0">line</span> in front of the <span class="ref c-serve" data-ref="barista" tabindex="0">barista</span> for the same setting.</figcaption>
+  </figure>
+
+  <dl class="terms wide" aria-label="Words you will meet">
+    <div class="c-arrive"><dt>Arrivals</dt><dd>Customers walking in. At 80% busy, about 0.4 a minute.</dd></div>
+    <div class="c-serve"><dt>Drink time</dt><dd>How long one order takes. 2 minutes on average here.</dd></div>
+    <div class="c-busy"><dt>Busy</dt><dd>Share of time the barista is making drinks. Also called utilization.</dd></div>
+    <div class="c-wait"><dt>Wait</dt><dd>Minutes in line before ordering, averaged over every customer.</dd></div>
+  </dl>
+
+  <section id="surprise" aria-labelledby="h-surprise">
+    <p class="eyebrow">The surprise</p>
+    <h2 id="h-surprise">Load and wait do not grow in step</h2>
+    <div class="predict">
+      <p class="q"><span class="tag">Guess first</span>The barista takes 2 minutes per drink and is busy 90% of the time. How long does the average customer wait in line?</p>
+      <div class="choices" role="group" aria-label="Your guess"><button type="button" class="btn">about 2 min</button><button type="button" class="btn">about 4 min</button><button type="button" class="btn" data-right>about 18 min</button></div>
+      <details><summary>Show the answer</summary><p><b>About 18 minutes</b>, nine drinks' worth. Most people guess 2 to 4, because they picture the line growing in step with the load. The next figure shows how far apart the two really are.</p></details>
+    </div>
+    <figure class="fig" aria-describedby="bars-cap">
+      <div class="bars grow" role="img" aria-label="Paired bars from 80% to 90% busy. Busy grows from 80 to 90 percent, an eighth. Wait grows from 8 to 18 minutes, 2.25 times." style="--ref: .42">
+        <p class="bars-ref" aria-hidden="true">value at 80% busy</p>
+        <div class="bar-grp c-busy"><p class="bar-name">Busy<b>× 1.125</b></p><div class="bar-track"><span class="bar was" style="--w: .42">80%</span><span class="bar now" style="--w: .47">90%</span></div></div>
+        <div class="bar-grp c-wait"><p class="bar-name">Wait<b>× 2.25</b></p><div class="bar-track"><span class="bar was" style="--w: .42">8 min</span><span class="bar now" style="--w: .945">18 min</span></div></div>
+      </div>
+      <figcaption id="bars-cap"><span class="fig-n">Fig. 2</span>The step from 80% to 90% busy, each bar drawn against its own value at 80%. Load grows by an eighth; the wait more than doubles.</figcaption>
+    </figure>
+    <div class="note myth">
+      <span class="tag">Myth</span>
+      <p>If the barista is 10% busier, customers wait about 10% longer.</p>
+      <span class="tag fact">What happens</span>
+      <p>The wait goes from 8 to 18 minutes. The reason is the next section: what clears a line is the barista's <em>spare</em> time, and spare time halves from 20% to 10%.</p>
+    </div>
+  </section>
+
+  <section id="mechanism" aria-labelledby="h-mechanism">
+    <p class="eyebrow">The mechanism</p>
+    <h2 id="h-mechanism">Spare time is the only thing that clears a backlog</h2>
+    <p>Customers do not arrive evenly: sometimes five walk in together. The barista can work off that extra line only in the minutes the normal flow of orders leaves free. At 50% busy, half of every minute is free. At 90% busy, a tenth is.</p>
+    <figure class="fig wide stepper" aria-describedby="drain-cap">
+      <div class="frame" style="--min: 720px; --min-phone: 780px">
+        <svg viewBox="0 0 960 380" role="img" aria-label="Line chart of extra people in line after a burst of five. The 50% busy café clears it in 20 minutes, the 90% busy café needs 100. A second burst at minute 60 leaves the 90% café four people over at minute 120.">
+          <defs>
+            <path id="p50" d="M80,180 L220,300"/><path id="p90" d="M80,180 L780,300"/>
+            <path id="p50c" d="M500,300 L500,180 L640,300"/><path id="p90c" d="M500,252 L500,132 L920,204"/>
+          </defs>
+          <line class="gr" x1="80" y1="180" x2="920" y2="180"/><line class="gr" x1="80" y1="60" x2="920" y2="60"/>
+          <path class="ax" d="M80,60 V300 H920"/>
+          <g class="t-s t-num" text-anchor="end"><text x="68" y="305">0</text><text x="68" y="185">5</text><text x="68" y="65">10</text></g>
+          <g class="t-s t-num" text-anchor="middle"><text x="80" y="324">0</text><text x="220" y="324">20</text><text x="360" y="324">40</text><text x="500" y="324">60</text><text x="640" y="324">80</text><text x="780" y="324">100</text><text x="920" y="324">120 min</text></g>
+          <text class="t-s k c-wait" x="80" y="40">extra people in line</text>
+          <g class="c-wait" data-s="1"><rect class="fk" x="73" y="180" width="14" height="120" rx="3"/><text class="t-b k" x="98" y="172">5 walk in at once</text></g>
+          <g style="--k: var(--ink-2)">
+            <path class="ln sk draw" d="M80,180 L220,300" pathLength="1" data-s="2"/>
+            <text class="t-b" x="232" y="290" data-s="2">50% busy: gone in 20 min</text>
+            <g class="dim" data-s="2"><line x1="80" y1="348" x2="220" y2="348"/><line x1="80" y1="342" x2="80" y2="354"/><line x1="220" y1="342" x2="220" y2="354"/><text class="t-s t-num" x="150" y="342" text-anchor="middle">20 min</text></g>
+            <path class="ln sk draw" d="M500,300 L500,180 L640,300" pathLength="1" data-s="4"/>
+            <circle class="tok fk" r="6" data-tok="2"><animateMotion dur="1.1s" begin="indefinite" fill="freeze"><mpath href="#p50"/></animateMotion></circle>
+            <circle class="tok fk" r="6" data-tok="4"><animateMotion dur="1.1s" begin="indefinite" fill="freeze"><mpath href="#p50c"/></animateMotion></circle>
+          </g>
+          <g class="c-wait">
+            <path class="ln sk draw" d="M80,180 L780,300" pathLength="1" data-s="3-3"/>
+            <text class="t-b k" x="600" y="250" data-s="3-3">90% busy: gone in 100 min</text>
+            <g class="dim" data-s="3-3"><line x1="80" y1="370" x2="780" y2="370"/><line x1="80" y1="364" x2="80" y2="376"/><line x1="780" y1="364" x2="780" y2="376"/><text class="t-s t-num k" x="430" y="366" text-anchor="middle">100 min</text></g>
+            <path class="ln sk" d="M80,180 L500,252" data-s="4"/>
+            <path class="ln sk draw" d="M500,252 L500,132 L920,204" pathLength="1" data-s="4"/>
+            <text class="t-b k" x="512" y="122" data-s="4">second burst</text>
+            <text class="t-b k" x="916" y="126" text-anchor="end" data-s="4">90%: still 4 over at 120 min</text>
+            <circle class="tok fk" r="6" data-tok="3"><animateMotion dur="1.1s" begin="indefinite" fill="freeze"><mpath href="#p90"/></animateMotion></circle>
+            <circle class="tok fk" r="6" data-tok="4"><animateMotion dur="1.1s" begin="indefinite" fill="freeze"><mpath href="#p90c"/></animateMotion></circle>
+          </g>
+        </svg>
+      </div>
+      <ol class="step-caps">
+        <li>Five extra customers walk in at once. The line now holds five more people than usual.</li>
+        <li>At 50% busy, half of every minute is spare. The barista works the extra five off in 20 minutes.</li>
+        <li>At 90% busy, a tenth of every minute is spare. The same five take 100 minutes.</li>
+        <li>A second burst lands at minute 60. The 50% café is clear again by minute 80. The 90% café never got back to normal and is still four people over at minute 120.</li>
+      </ol>
+      <figcaption id="drain-cap"><span class="fig-n">Fig. 3</span>Extra people in line after a burst, average drain rate (bursts are illustrative). Spare capacity is 1 person every 4 minutes at 50% busy and 1 every 20 minutes at 90%.</figcaption>
+    </figure>
+    <div class="note key c-wait">
+      <span class="tag">Key idea</span>
+      <p>The wait formula is this picture in one line: <b>average wait = drink time × busy ÷ spare</b>. At 90%: 2 min × 0.9 ÷ 0.1 = 18 min. As spare time shrinks toward zero, the wait has no ceiling.</p>
+    </div>
+    <details>
+      <summary>Where the formula comes from</summary>
+      <p>For random arrivals and drink times (the M/M/1 queue), the average number of people waiting is <math><mfrac><msup><mi>ρ</mi><mn>2</mn></msup><mrow><mn>1</mn><mo>−</mo><mi>ρ</mi></mrow></mfrac></math>, where <math><mi>ρ</mi></math> is the busy share. Little's law says people waiting = arrivals per minute × wait, and arrivals per minute are <math><mi>ρ</mi><mo>/</mo><mi>S</mi></math> for drink time <math><mi>S</mi></math>. Divide, and the wait is</p>
+      <p><math display="block"><msub><mi>W</mi><mi>q</mi></msub><mo>=</mo><mi>S</mi><mo>·</mo><mfrac><mi>ρ</mi><mrow><mn>1</mn><mo>−</mo><mi>ρ</mi></mrow></mfrac></math></p>
+    </details>
+  </section>
+
+  <section id="fix" aria-labelledby="h-fix">
+    <p class="eyebrow">The fix</p>
+    <h2 id="h-fix">One shared line halves the wait without hiring anyone</h2>
+    <p>Take two baristas, each 90% busy. With two separate lines, one barista can stand idle while people wait in the other line. With one shared line, nobody waits while a barista is free.</p>
+    <figure class="fig wide" data-state="before" aria-describedby="pool-cap">
+      <div class="seg" role="group" aria-label="Line layout" data-toggle>
+        <button type="button" class="btn" data-state="before" aria-pressed="true">Two separate lines</button>
+        <button type="button" class="btn" data-state="after" aria-pressed="false">One shared line</button>
+      </div>
+      <div class="frame" style="--min: 720px; --min-phone: 780px">
+        <svg viewBox="0 0 960 300" role="img" aria-label="Two baristas, each 90% busy. With two separate lines, 16 people wait 18 minutes on average. With one shared line, 8 people wait 8.5 minutes.">
+          <defs>
+            <g id="pp2"><circle cy="-21" r="7.5"/><rect x="-9" y="-11" width="18" height="29" rx="8"/></g>
+            <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-3)"/></marker>
+          </defs>
+          <g class="c-wait">
+            <g class="only-before"><text class="t-big k" x="24" y="128">18 min</text><text class="t-s" x="26" y="158">average wait · 16 people in line</text>
+              <text class="t-s k" x="520" y="109" text-anchor="end">8 wait for A</text><text class="t-s k" x="520" y="229" text-anchor="end">8 wait for B</text></g>
+            <g class="only-after"><text class="t-big k" x="24" y="128">8.5 min</text><text class="t-s" x="26" y="158">average wait · 8 people in line</text>
+              <text class="t-s k" x="505" y="126">8 wait for whoever is free first</text></g>
+            <g class="only-before row-a"><use href="#pp2" class="fk" x="780" y="110"/><use href="#pp2" class="fk" x="746" y="110"/><use href="#pp2" class="fk" x="712" y="110"/><use href="#pp2" class="fk" x="678" y="110"/><use href="#pp2" class="fk" x="644" y="110"/><use href="#pp2" class="fk" x="610" y="110"/><use href="#pp2" class="fk" x="576" y="110"/><use href="#pp2" class="fk" x="542" y="110"/></g>
+            <g class="only-before row-b"><use href="#pp2" class="fk" x="780" y="230"/><use href="#pp2" class="fk" x="746" y="230"/><use href="#pp2" class="fk" x="712" y="230"/><use href="#pp2" class="fk" x="678" y="230"/><use href="#pp2" class="fk" x="644" y="230"/><use href="#pp2" class="fk" x="610" y="230"/><use href="#pp2" class="fk" x="576" y="230"/><use href="#pp2" class="fk" x="542" y="230"/></g>
+            <g class="only-after row-s"><use href="#pp2" class="fk" x="752" y="170"/><use href="#pp2" class="fk" x="718" y="170"/><use href="#pp2" class="fk" x="684" y="170"/><use href="#pp2" class="fk" x="650" y="170"/><use href="#pp2" class="fk" x="616" y="170"/><use href="#pp2" class="fk" x="582" y="170"/><use href="#pp2" class="fk" x="548" y="170"/><use href="#pp2" class="fk" x="514" y="170"/></g>
+          </g>
+          <g class="only-after" fill="none" stroke="var(--ink-3)" stroke-width="2" marker-end="url(#ah)">
+            <path d="M770,160 C795,160 795,92 816,92"/><path d="M770,160 C795,160 795,212 816,212"/>
+          </g>
+          <g class="c-serve">
+            <rect class="tk" x="822" y="66" width="126" height="52" rx="8"/><text class="t-b k" x="885" y="90" text-anchor="middle">Barista A</text><text class="t-s k c-busy" x="885" y="108" text-anchor="middle">90% busy</text>
+            <rect class="tk" x="822" y="186" width="126" height="52" rx="8"/><text class="t-b k" x="885" y="210" text-anchor="middle">Barista B</text><text class="t-s k c-busy" x="885" y="228" text-anchor="middle">90% busy</text>
+          </g>
+        </svg>
+      </div>
+      <figcaption id="pool-cap"><span class="fig-n">Fig. 4</span>Same two baristas, same customers, each barista 90% busy. Two separate lines: 18 minutes average wait, about 16 people waiting. One shared line: 8.5 minutes, about 8 people (M/M/2 queue).</figcaption>
+    </figure>
+    <div class="note watch">
+      <span class="tag">Watch out</span>
+      <p>Real customers switch to the shorter line, which closes part of this gap. A shared line still wins, because nobody gets stuck behind one slow order while the other barista is free.</p>
+    </div>
+  </section>
+
+  <section id="limits" aria-labelledby="h-limits">
+    <p class="eyebrow">The limits</p>
+    <h2 id="h-limits">Real lines are usually worse than this model</h2>
+    <p>Every number above assumes drink times vary at random around 2 minutes. If they vary more, the whole curve lifts. A flat white takes one minute and a seasonal special takes six.</p>
+    <figure class="fig" aria-describedby="var-cap">
+      <div class="frame" style="--min-phone: 560px">
+      <svg viewBox="0 0 680 300" role="img" aria-label="Three wait curves against busy share. At 90% busy: 9 minutes if every drink takes exactly 2 minutes, 18 with random drink times, 29 if drink times spread 1.5 times wider.">
+        <line class="gr" x1="60" y1="195" x2="600" y2="195"/><line class="gr" x1="60" y1="140" x2="600" y2="140"/><line class="gr" x1="60" y1="85" x2="600" y2="85"/><line class="gr" x1="60" y1="30" x2="600" y2="30"/>
+        <path class="ax" d="M60,30 V250 H600"/>
+        <g class="t-s t-num" text-anchor="end"><text x="50" y="255">0</text><text x="50" y="200">10</text><text x="50" y="145">20</text><text x="50" y="90">30</text><text x="50" y="35">40</text></g>
+        <g class="t-s t-num" text-anchor="middle"><text x="60" y="274">0%</text><text x="195" y="274">25%</text><text x="330" y="274">50%</text><text x="465" y="274">75%</text><text x="600" y="274">100%</text></g>
+        <text class="t-s k c-busy" x="330" y="296" text-anchor="middle">how busy the barista is</text>
+        <line class="guide c-busy" x1="546" y1="30" x2="546" y2="250"/><text class="t-s t-num k c-busy" x="546" y="20" text-anchor="middle">90%</text>
+        <path class="ln" stroke="var(--ink-3)" stroke-dasharray="7 6" d="M60,250 L114,249 L168,249 L222,248 L276,246 L330,244 L384,242 L400,241 L416,239 L433,238 L449,236 L465,234 L481,230 L497,227 L514,221 L530,213 L535,210 L541,205 L546,200 L551,194 L557,187 L562,177 L568,164 L573,145 L578,118 L584,72 L587,30"/>
+        <path class="ln sk c-wait" d="M60,250 L114,249 L168,247 L222,245 L276,243 L330,239 L384,234 L400,231 L416,229 L433,226 L449,222 L465,217 L481,211 L497,203 L514,192 L530,176 L535,169 L541,161 L546,151 L551,139 L557,123 L562,104 L568,78 L573,41 L574,30"/>
+        <path class="ln" stroke="var(--ink)" d="M60,250 L114,248 L168,246 L222,242 L276,238 L330,232 L384,223 L400,220 L416,215 L433,210 L449,204 L465,196 L481,187 L497,174 L514,156 L530,130 L535,119 L541,105 L546,89 L551,69 L557,44 L559,30"/>
+        <circle cx="546" cy="200.5" r="5.5" fill="var(--ink-3)"/>
+        <circle cx="546" cy="151" r="5.5" class="fk c-wait"/>
+        <circle cx="546" cy="89" r="5.5" fill="var(--ink)"/>
+        <rect x="70" y="24" width="330" height="98" rx="6" fill="var(--surface)"/>
+        <g class="t-s">
+          <text class="t-s t-b" x="80" y="40">Wait at 90% busy</text>
+          <line x1="80" y1="58" x2="108" y2="58" stroke="var(--ink)" stroke-width="3"/><text x="118" y="63">erratic drinks, 1.5× the spread: <tspan class="t-num" font-weight="600">29 min</tspan></text>
+          <line x1="80" y1="84" x2="108" y2="84" class="sk c-wait" stroke-width="3"/><text x="118" y="89" class="k c-wait">random drink times (this page): <tspan class="t-num" font-weight="600">18 min</tspan></text>
+          <line x1="80" y1="110" x2="108" y2="110" stroke="var(--ink-3)" stroke-width="3" stroke-dasharray="7 6"/><text x="118" y="115">every drink exactly 2 min: <tspan class="t-num" font-weight="600">9 min</tspan></text>
+        </g>
+      </svg>
+      </div>
+      <figcaption id="var-cap"><span class="fig-n">Fig. 5</span>Kingman's approximation: the wait scales with how much drink times vary. At 90% busy, 9 minutes if every drink takes exactly 2 minutes, 18 with random times, 29 if times spread 1.5 times wider.</figcaption>
+    </figure>
+    <ul class="limits">
+      <li><span><b>People leave when the line looks long.</b> That caps the line but loses the sale, so the café sees a shorter line than the model and less revenue.</span></li>
+      <li><span><b>Rush hour is not steady.</b> The formula gives the long-run average. A 20-minute rush can run well above it and take an hour to drain.</span></li>
+      <li><span><b>Arrivals are not always random.</b> A bus stop outside the door sends customers in clumps, and clumps lengthen the wait the same way erratic drinks do.</span></li>
+    </ul>
+    <details>
+      <summary>The formula with variability</summary>
+      <p>Kingman's approximation multiplies the basic wait by the average squared spread of arrival gaps <math><msub><mi>c</mi><mi>a</mi></msub></math> and drink times <math><msub><mi>c</mi><mi>s</mi></msub></math> (1 means random, 0 means perfectly regular):</p>
+      <p><math display="block"><msub><mi>W</mi><mi>q</mi></msub><mo>≈</mo><mi>S</mi><mo>·</mo><mfrac><mi>ρ</mi><mrow><mn>1</mn><mo>−</mo><mi>ρ</mi></mrow></mfrac><mo>·</mo><mfrac><mrow><msubsup><mi>c</mi><mi>a</mi><mn>2</mn></msubsup><mo>+</mo><msubsup><mi>c</mi><mi>s</mi><mn>2</mn></msubsup></mrow><mn>2</mn></mfrac></math></p>
+    </details>
+  </section>
+
+  <section id="remember" aria-labelledby="h-remember">
+    <div class="recap-box">
+      <p class="eyebrow">What to remember</p>
+      <h2 id="h-remember">Wait is drink time × busy ÷ spare</h2>
+      <ol>
+        <li>From 80% to 90% busy, the wait more than doubles: 8 to 18 minutes.</li>
+        <li>Only spare time drains a backlog, and at 90% busy there is a tenth of it.</li>
+        <li>One shared line cuts the wait from 18 to 8.5 minutes with the same staff.</li>
+        <li>Uneven drink times or clumped arrivals push every number higher.</li>
+      </ol>
+      <p class="next"><b>Ask about your own line:</b> how busy is your busiest hour, not your average one? The average hides the hour where the curve goes vertical.</p>
+    </div>
+  </section>
+
+  <section class="sources" aria-label="Sources">
+    <p class="eyebrow">Sources</p>
+    <ul>
+      <li>Leonard Kleinrock, <i>Queueing Systems, Volume 1: Theory</i> (Wiley, 1975): the M/M/1 and M/M/c results behind Fig. 1, 3 and 4.</li>
+      <li>J. F. C. Kingman, “The single server queue in heavy traffic”, <i>Proceedings of the Cambridge Philosophical Society</i> 57 (1961): the approximation in Fig. 5.</li>
+      <li>Every number is computed for a 2-minute average drink; the model is the function <code>model()</code> in this page's source.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+/* ── ELI15 RUNTIME: keep as is. Page-specific code goes in the next script. ── */
+(() => {
+  const root = document.documentElement, qs = new URLSearchParams(location.search);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  const store = {
+    get: k => { try { return localStorage.getItem(k); } catch { return null; } },
+    set: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
+  };
+  const E = (window.ELI15 = { steppers: [] });
+  E.still = () => reduce.matches || root.classList.contains('motion-off');
+
+  // theme: ?theme=dark|light, then the saved choice, then the OS setting
+  const theme = qs.get('theme') || store.get('eli15-theme');
+  if (theme === 'dark' || theme === 'light') root.dataset.theme = theme;
+  for (const b of document.querySelectorAll('[data-action="theme"]')) b.addEventListener('click', () => {
+    const now = root.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    root.dataset.theme = now === 'dark' ? 'light' : 'dark';
+    store.set('eli15-theme', root.dataset.theme);
+  });
+
+  // ambient motion runs only while on screen, the tab is visible, and motion is allowed
+  const ambient = [];
+  const sync = () => {
+    for (const a of ambient) {
+      const run = a.seen && !E.still() && !document.hidden;
+      if (run !== a.running) { a.running = run; run ? a.start() : a.stop(); }
+    }
+    for (const s of document.querySelectorAll('svg')) E.still() ? s.pauseAnimations() : s.unpauseAnimations();
+  };
+  const seen = new IntersectionObserver(es => {
+    for (const e of es) for (const a of ambient) if (a.el === e.target) a.seen = e.isIntersecting;
+    sync();
+  });
+  E.ambient = (el, start, stop) => { ambient.push({ el, start, stop, seen: false, running: false }); seen.observe(el); };
+  const motionBtn = document.querySelector('[data-action="motion"]');
+  const setMotion = off => {
+    root.classList.toggle('motion-off', off);
+    if (motionBtn) { motionBtn.setAttribute('aria-pressed', off); motionBtn.textContent = off ? 'Play motion' : 'Pause motion'; }
+    sync();
+  };
+  motionBtn?.addEventListener('click', () => {
+    const off = !root.classList.contains('motion-off');
+    store.set('eli15-motion', off ? 'off' : 'on'); setMotion(off);
+  });
+  if (qs.get('motion') === 'off' || store.get('eli15-motion') === 'off') setMotion(true);
+  reduce.addEventListener('change', sync);
+  document.addEventListener('visibilitychange', sync);
+
+  // tokens: a dot rides a path once when its step is entered going forward
+  const runToken = t => {
+    const anims = t.querySelectorAll('animateMotion');
+    if (!anims.length) return;
+    t.classList.add('run');
+    for (const a of anims) a.beginElement();
+    clearTimeout(t._done);
+    t._done = setTimeout(() => t.classList.remove('run'), (parseFloat(anims[0].getAttribute('dur')) || 1.1) * 1000 + 200);
+  };
+
+  // steppers: data-s="3" shows from step 3 on, data-s="2-3" only on steps 2 to 3.
+  // They open on the last step, so the default picture is the complete one.
+  const inStep = (spec, k) => { const [a, b = Infinity] = spec.split('-').map(Number); return k >= a && k <= b; };
+  for (const fig of document.querySelectorAll('figure.stepper')) {
+    const parts = [...fig.querySelectorAll('[data-s]')];
+    const capList = fig.querySelector('.step-caps');
+    const caps = capList ? [...capList.children] : [];
+    const n = caps.length;
+    if (!n) continue;
+    const player = document.createElement('div');
+    player.className = 'player';
+    player.innerHTML = `<button type="button" class="btn icon" aria-label="Previous step">‹</button><button type="button" class="btn">Play</button><input type="range" min="1" max="${n}" step="1" aria-label="Step"><button type="button" class="btn icon" aria-label="Next step">›</button><span class="count" aria-hidden="true"></span><span class="sr" aria-live="polite"></span>`;
+    capList.before(player);
+    const [prev, play, range, next, count, live] = player.children;
+    let k = n, timer = 0, build = 0;
+    const show = (to, animate = true, announce = animate) => {
+      const from = k;
+      k = Math.max(1, Math.min(n, to));
+      fig.classList.toggle('no-anim', !animate || E.still());
+      for (const p of parts) p.classList.toggle('on', inStep(p.dataset.s, k));
+      caps.forEach((c, j) => { c.classList.toggle('now', j === k - 1); c.classList.toggle('past', j < k - 1); });
+      range.value = k;
+      count.textContent = `${k} / ${n}`;
+      prev.setAttribute('aria-disabled', k === 1);
+      next.setAttribute('aria-disabled', k === n);
+      if (announce) live.textContent = `Step ${k} of ${n}. ${caps[k - 1].textContent}`;
+      if (animate && !E.still() && k === from + 1) for (const t of fig.querySelectorAll(`[data-tok="${k}"]`)) runToken(t);
+    };
+    const stop = () => { clearInterval(timer); clearInterval(build); timer = build = 0; play.textContent = 'Play'; };
+    play.addEventListener('click', () => {
+      if (timer) return stop();
+      if (k === n) show(1);
+      play.textContent = 'Pause';
+      timer = setInterval(() => { show(k + 1); if (k === n) stop(); }, +fig.dataset.interval || 2600);
+    });
+    prev.addEventListener('click', () => { stop(); show(k - 1); });
+    next.addEventListener('click', () => { stop(); show(k + 1); });
+    range.addEventListener('input', () => { stop(); show(+range.value); });
+    caps.forEach((c, j) => c.addEventListener('click', () => { stop(); show(j + 1); }));
+    fig.tabIndex = 0;
+    fig.addEventListener('keydown', e => {
+      if (e.target.matches('input, button')) return;
+      if (e.key === 'ArrowRight') { stop(); show(k + 1); }
+      if (e.key === 'ArrowLeft') { stop(); show(k - 1); }
+    });
+    // entrance: with motion allowed the figure waits on step 1 and builds itself once,
+    // quickly, the first time it scrolls into view; otherwise it shows the last step
+    const primed = !E.still() && !qs.has('step');
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      if (!primed || timer || k !== 1) return;
+      if (E.still()) return show(n, false, false);
+      build = setInterval(() => { show(k + 1, true, false); if (k === n) { clearInterval(build); build = 0; } }, 520);
+    }, { threshold: 0.35 });
+    io.observe(fig);
+    E.steppers.push({ fig, show, n, stop });
+    show(qs.has('step') ? +qs.get('step') : primed ? 1 : n, false, false);
+  }
+
+  // before / after toggles: buttons set data-state on the figure; CSS shows .only-before / .only-after
+  for (const g of document.querySelectorAll('[data-toggle]')) {
+    const fig = g.closest('figure'), btns = [...g.querySelectorAll('button[data-state]')];
+    const set = st => { fig.dataset.state = st; for (const b of btns) b.setAttribute('aria-pressed', b.dataset.state === st); };
+    for (const b of btns) b.addEventListener('click', () => set(b.dataset.state));
+    if (qs.has('state')) set(qs.get('state'));
+  }
+
+  // predict, then reveal: picking a choice marks it and opens the answer
+  for (const p of document.querySelectorAll('.predict')) {
+    const btns = [...p.querySelectorAll('.choices button')], ans = p.querySelector('details');
+    for (const b of btns) b.addEventListener('click', () => {
+      for (const x of btns) { x.classList.toggle('picked', x === b); x.classList.toggle('right', x.hasAttribute('data-right')); x.setAttribute('aria-pressed', x === b); }
+      p.classList.add('answered');
+      if (ans) ans.open = true;
+    });
+  }
+
+  // linked highlighting: hovering or focusing a .ref term lights the figure parts with the same data-ref
+  for (const el of document.querySelectorAll('.ref[data-ref]')) {
+    const mark = on => { for (const x of document.querySelectorAll(`[data-ref="${el.dataset.ref}"]`)) x.classList.toggle('hl', on); };
+    for (const [ev, on] of [['mouseenter', true], ['mouseleave', false], ['focus', true], ['blur', false]]) el.addEventListener(ev, () => mark(on));
+  }
+
+  // .grow: bars start at their reference size and grow once, the first time they are seen
+  const grow = new IntersectionObserver(es => {
+    for (const e of es) if (e.isIntersecting) { e.target.classList.add('seen'); grow.unobserve(e.target); }
+  }, { threshold: 0.5 });
+  for (const el of document.querySelectorAll('.grow')) E.still() ? el.classList.add('seen') : grow.observe(el);
+
+  // print: every stepper on its last step, every details open
+  addEventListener('beforeprint', () => {
+    for (const el of document.querySelectorAll('.grow')) el.classList.add('seen');
+    for (const s of E.steppers) { s.stop(); s.show(s.n, false, false); }
+    for (const d of document.querySelectorAll('details')) d.open = true;
+  });
+  root.classList.add('js');
+})();
+</script>
+<script>
+/* ── PAGE: the live model for Fig. 1. Replace for every topic. ── */
+(() => {
+  const fig = document.getElementById('hero');
+  if (!fig) return;
+  const $ = s => fig.querySelector(s);
+  const input = $('#busy'), people = [...fig.querySelectorAll('.q-p')];
+  // M/M/1 queue, 2-minute average drink; r = busy share (0..1)
+  const model = r => ({ line: r * r / (1 - r), wait: 2 * r / (1 - r), perMin: r / 2 });
+  const X = r => 60 + r * 380, Y = w => 240 - Math.min(w, 40) * 5.25;
+  const fmt = v => (v < 10 ? v.toFixed(1).replace(/\.0$/, '') : String(Math.round(v)));
+  let tail = 400;
+  const render = () => {
+    const r = input.value / 100, m = model(r), pct = Math.round(r * 100);
+    const shown = Math.min(people.length, Math.round(m.line));
+    const noun = fmt(m.line) === '1' ? 'person' : 'people';
+    people.forEach((p, i) => p.classList.toggle('on', i < shown));
+    tail = 330 - Math.max(shown - 1, 0) * 24;
+    const more = Math.round(m.line) - people.length;
+    $('#q-more').textContent = `+${more} more outside`;
+    $('#q-more').setAttribute('opacity', more > 0 ? 1 : 0);
+    $('#q-none').setAttribute('opacity', shown ? 0 : 1);
+    $('#q-dim').setAttribute('opacity', shown ? 1 : 0);
+    for (const id of ['#q-dl', '#q-t1']) $(id).setAttribute('x1', tail - 12);
+    $('#q-t1').setAttribute('x2', tail - 12);
+    $('#q-dt').setAttribute('x', (tail - 12 + 342) / 2);
+    $('#q-dt').textContent = `${fmt(m.line)} ${noun} waiting, on average`;
+    $('#q-rate').textContent = `${m.perMin.toFixed(2)} arrive / min`;
+    $('#gauge').setAttribute('stroke-dashoffset', 1 - r);
+    $('#gauge-t').textContent = `busy ${pct}%`;
+    const mx = X(r), my = Y(m.wait);
+    $('#mk').setAttribute('cx', mx); $('#mk').setAttribute('cy', my);
+    $('#gx').setAttribute('x1', mx); $('#gx').setAttribute('x2', mx); $('#gx').setAttribute('y1', my);
+    $('#gy').setAttribute('x2', mx); $('#gy').setAttribute('y1', my); $('#gy').setAttribute('y2', my);
+    $('#mk-t').setAttribute('x', mx - 14); $('#mk-t').setAttribute('y', my - 12);
+    $('#mk-t').textContent = `${fmt(m.wait)} min`;
+    $('#busy-out').textContent = `${pct}%`;
+    $('#s-busy').textContent = `${pct}%`;
+    $('#s-line').textContent = fmt(m.line);
+    $('#s-noun').textContent = noun;
+    $('#s-wait').textContent = fmt(m.wait);
+  };
+  input.addEventListener('input', render);
+  render();
+
+  // ambient: one café minute = one second. A customer arrives every 2/r minutes; in the long run
+  // one drink leaves per arrival, so the cup leaves at the same rate.
+  const dot = $('#arrival'), cup = $('#cup');
+  let timer = 0;
+  const tick = () => {
+    const dx = tail - 24 - 27;
+    dot.animate([{ transform: 'translateX(0)', opacity: 0 }, { opacity: 1, offset: 0.15 }, { transform: `translateX(${dx}px)`, opacity: 1, offset: 0.85 }, { transform: `translateX(${dx}px)`, opacity: 0 }], { duration: 1500, easing: 'ease-in-out' });
+    cup.animate([{ transform: 'translate(0, 0)', opacity: 1 }, { transform: 'translate(16px, -40px)', opacity: 0 }], { duration: 1200, delay: 250, easing: 'ease-out' });
+    timer = setTimeout(tick, 2000 / (input.value / 100));
+  };
+  ELI15.ambient(fig, tick, () => clearTimeout(timer));
+})();
+</script>
+</body>
+</html>

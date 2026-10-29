@@ -1,0 +1,15 @@
+{
+  "name": "claude-eli15-plugin",
+  "owner": {
+    "name": "DresvyanskiyDenis",
+    "url": "https://github.com/DresvyanskiyDenis"
+  },
+  "description": "eli15: interactive explainer pages for any topic, for Claude Code.",
+  "plugins": [
+    {
+      "name": "eli15",
+      "source": "./plugins/eli15",
+      "description": "Explain any topic as one self-contained, interactive HTML page: a live model to drag, step-through diagrams, before/after toggles, a predict-then-reveal question, concept colours, with a headless-Chrome ship check that a stop hook runs before Claude finishes."
+    }
+  ]
+}
