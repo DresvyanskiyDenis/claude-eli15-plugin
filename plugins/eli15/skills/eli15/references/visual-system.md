@@ -9,7 +9,8 @@ this file for the reasons and the choices.
 - **Concept colours carry meaning.** Two to five hues, one per idea the reader must track,
   used for that idea everywhere. Neutral ink for everything else.
 - **Status colours are only status.** `--ok`, `--warn`, `--risk` mean right, caution and
-  wrong. Never use them as a concept colour, never use a concept colour for status.
+  wrong. Never use them as a concept colour, never use a concept colour for status. Status
+  in a figure carries a mark or a word too (✓, ✗, ↯, "risk"), never colour alone.
 - **The first viewport is the answer as a picture.** Title, lead, and the top of the hero
   figure are visible at 1280×800 without scrolling.
 - **Labels sit on the marks.** Label a line at its end, a bar inside or beside it, an arrow
@@ -52,10 +53,12 @@ sideways. Each concept is a token and a class:
 ```
 
 - Name the variable for the idea (`--c-wait`), not the hue (`--c-pink`).
-- Light mode L 52–64%, dark mode L 72–80%, chroma 0.10–0.20, same hue in both.
-- Space hues at least 60° apart on the oklch wheel, and keep them 30° or more away from
-  `--risk` (28) unless the concept *is* the bad outcome (the template's `--c-wait` at 352
-  is deliberately close: waiting is the cost).
+- Light mode L 52–64%, dark mode L 72–80%, chroma 0.10–0.20, the same hue in both
+  (within 10°).
+- Space hues at least 60° apart on the oklch wheel, and keep each 30° or more away from
+  every status hue: `--risk` 28, `--warn` 90 (dark 100), `--ok` 145. That leaves 175–358
+  plus one orange slot at about 60 (the template's `--c-busy`), room for five concepts.
+  Only a concept that *is* the bad outcome may sit closer to `--risk`.
 - Order them by the story: the input the reader controls, the mechanism, the outcome.
 
 **How components take a colour:** put `.c-name` on any element or SVG group; it sets

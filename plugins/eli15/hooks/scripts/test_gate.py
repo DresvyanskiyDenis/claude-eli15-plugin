@@ -1,6 +1,9 @@
-"""Gate tests. check.py is faked, so no Chrome or uv is needed."""
+"""Gate tests. The unit tests fake check.py; the last test runs the real one and skips
+without uv or Chrome."""
 
 import json
+import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -114,3 +117,31 @@ def test_hooks_json_points_at_this_script():
     for event in ("PostToolUse", "Stop", "SubagentStop"):
         args = hooks[event][0]["hooks"][0]["args"]
         assert args == ["${CLAUDE_PLUGIN_ROOT}/hooks/scripts/gate.py"]
+
+
+def test_real_check_blocks_the_template_and_passes_a_clean_copy(tmp_path):
+    """Hook JSON through gate.py, the real check.py and Chrome: the template's demo text
+    blocks the stop, the same page with the demo words swapped passes."""
+    if not gate.find_uv():
+        pytest.skip("uv not installed")
+    template = (gate.SKILL / "assets" / "template.html").read_text()
+    raw, clean = tmp_path / "raw.html", tmp_path / "clean.html"
+    raw.write_text(template)
+    clean.write_text(re.sub(r"barista|caf[eé]",
+                            lambda m: "server" if m.group(0).lower() == "barista" else "shop", template, flags=re.I))
+    env = {**os.environ, "TMPDIR": str(tmp_path)}
+
+    def hook(ev):
+        ev = {"session_id": "e2e", "cwd": str(tmp_path), **ev}
+        r = subprocess.run([sys.executable, str(Path(gate.__file__).resolve())], input=json.dumps(ev),
+                           capture_output=True, text=True, env=env, timeout=600)
+        return json.loads(r.stdout) if r.stdout else {}
+
+    for page in (raw, clean):
+        hook({"hook_event_name": "PostToolUse", "tool_name": "Write", "tool_input": {"file_path": str(page)}})
+    res = hook({"hook_event_name": "Stop"})
+    if "could not run" in res.get("systemMessage", ""):
+        pytest.skip(res["systemMessage"])
+    assert res.get("decision") == "block"
+    assert "raw.html" in res["reason"] and "demo text" in res["reason"]
+    assert "eli15 check passed: clean.html" in res["systemMessage"]

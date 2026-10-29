@@ -105,7 +105,8 @@ and exactly one predict box.
   check know only those. Put the reader's words on the buttons, not in `data-state`.
 - The figure's `data-state` in the markup is what no-JS and print show; pick the state
   that makes the stronger point alone.
-- `.only-before` / `.only-after` fade; parts in both states stay. A label that differs
+- `.only-before` / `.only-after` fade, then turn `visibility: hidden`, so screen readers
+  skip the hidden state too; parts in both states stay. A label that differs
   between states is two `<text>` elements, one per class: a class on a `<tspan>` does not
   fade. To make the change
   visible as movement, give groups a transform per state in the page CSS block, as the

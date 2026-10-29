@@ -8,6 +8,26 @@
   interactive figure.
 - `references/visual-system.md`: a page's own grid item that holds code needs `min-width: 0`,
   or the phone scrolls sideways.
+- Template: `--warn` moves to hue 90 (dark 100) and `--ok` to 145, so every concept hue sits
+  at least 30° from every status hue. Before, busy orange and warn were 20° apart (15° in dark).
+  `references/visual-system.md` states the rule and the free hue range.
+- `references/visual-system.md`: status in a figure carries a mark or a word (✓ ✗ ↯ "risk"),
+  never colour alone.
+- `references/explainer-craft.md`: a PR or release explainer keeps its repo's section order;
+  the predict box goes in the quiz and the recap box is optional.
+
+### Fixed
+
+- Template: the hidden side of a before/after toggle turns `visibility: hidden` after it
+  fades, so screen readers no longer read both states.
+- `check.py`: the demo-text check ignores words inside inline `<code>`, so a page may name
+  the template's demo terms in code.
+
+### Added
+
+- `hooks/scripts/test_gate.py`: an end-to-end test pipes hook JSON through `gate.py` into the
+  real `check.py` and Chrome. The raw template blocks on demo text; a copy with the demo words
+  swapped passes. It skips without uv or Chrome.
 
 ## 0.1.0-alpha.1
 

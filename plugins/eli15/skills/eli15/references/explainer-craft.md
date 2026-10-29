@@ -157,6 +157,10 @@ nothing is.
 6. **Sources:** where every number comes from, including "computed by `model()` in this
    page's source".
 
+A PR or release explainer keeps the order its repo's convention sets (background, change
+diagram, walkthrough, quiz): the predict box goes in the quiz and the recap box is optional.
+The kit, the figures and the check stay the same.
+
 ## Self-check
 
 Answer each by looking at the page:
