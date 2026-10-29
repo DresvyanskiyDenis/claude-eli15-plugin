@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="explain-diff:base" content="8260780a07413f39b8151be1c5eabe4fb57adb0c">
+<meta name="explain-diff:head" content="83dde177e7d53dda99fb5e3131e83d993cf3aee9">
+<title>eli15 0.1.0-alpha.2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* ── PAGE CONCEPTS and page CSS: one colour per idea, named for the idea, then this page's own rules. Replace for every topic. ── */
+:root {
+  --c-guide: light-dark(oklch(54% 0.16 252), oklch(74% 0.12 252));
+  --c-kit: light-dark(oklch(54% 0.11 178), oklch(77% 0.1 178));
+  --c-check: light-dark(oklch(64% 0.16 60), oklch(80% 0.13 70));
+  --c-gate: light-dark(oklch(55% 0.2 320), oklch(74% 0.15 320));
+}
+.c-guide { --k: var(--c-guide); } .c-kit { --k: var(--c-kit); }
+.c-check { --k: var(--c-check); } .c-gate { --k: var(--c-gate); }
+
+/* this page's own rules: code, the hue wheel, rule list, status text */
+code { font: 500 .88em var(--font-mono); background: var(--sunk); border: 1px solid var(--line); border-radius: 5px; padding: .08em .35em; overflow-wrap: anywhere; }
+pre.cmd { font: 500 .85rem/1.55 var(--font-mono); background: var(--sunk); border: 1px solid var(--line); border-radius: 10px; padding: .75rem 1rem; margin: 1.2rem 0; overflow-x: auto; white-space: pre; max-width: 100%; }
+pre.cmd code { background: none; border: 0; padding: 0; font: inherit; }
+pre.cmd .del { color: var(--risk); } pre.cmd .add { color: var(--ok); }
+svg .wd { --wc: light-dark(oklch(72% .12 var(--h)), oklch(66% .11 var(--h))); fill: var(--wc); stroke: var(--wc); stroke-width: .7; }
+svg .ho { fill: none; stroke: var(--line-2); stroke-width: 1.5; stroke-dasharray: 5 4; }
+svg .rm { fill: none; stroke: var(--ink-3); stroke-width: 1.5; }
+svg text.ho-t { fill: var(--ink-3); }
+.v-ok { color: var(--ok); } .v-bad { color: var(--risk); }
+.rules { display: grid; gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; margin: 1.75rem 0; }
+.rules > div { background: var(--surface); padding: .85rem 1.1rem; display: grid; grid-template-columns: 15rem 1fr; gap: .4rem 1.2rem; min-width: 0; }
+.rules dt { font: 600 .85rem/1.5 var(--font-mono); color: var(--ink-3); overflow-wrap: anywhere; min-width: 0; }
+.rules dd { margin: 0; font-size: 1rem; line-height: 1.5; min-width: 0; }
+@media (max-width: 760px) { .rules > div { grid-template-columns: 1fr; } }
+.page > section > h3 { margin-top: 2.75rem; }
+.page > section > h2 + h3 { margin-top: .9rem; }
+.page > section > .terms { margin-bottom: 2rem; }
+.cases dd code { display: inline-block; }
+@media print { .page > section > .eyebrow, .page > section > h2, .page > section > h3 { break-after: avoid; } }
+
+/* ── ELI15 KIT: keep from here to the end of the style block. ── */
+:root {
+  color-scheme: light dark;
+  --bg:      light-dark(oklch(98.3% 0.007 85), oklch(18.5% 0.012 260));
+  --surface: light-dark(oklch(100% 0 0),       oklch(22.5% 0.014 260));
+  --sunk:    light-dark(oklch(95.4% 0.010 85), oklch(15.8% 0.010 260));
+  --ink:     light-dark(oklch(22% 0.02 265),   oklch(94% 0.008 85));
+  --ink-2:   light-dark(oklch(40% 0.02 265),   oklch(81% 0.010 85));
+  --ink-3:   light-dark(oklch(56% 0.015 265),  oklch(65% 0.012 85));
+  --line:    light-dark(oklch(89% 0.010 85),   oklch(32% 0.014 260));
+  --line-2:  light-dark(oklch(78% 0.012 85),   oklch(46% 0.014 260));
+  /* status: only for right / caution / wrong, never for a concept */
+  --ok:   light-dark(oklch(52% 0.13 145), oklch(76% 0.13 145));
+  --warn: light-dark(oklch(60% 0.14 90),  oklch(82% 0.13 100));
+  --risk: light-dark(oklch(54% 0.20 28),  oklch(72% 0.16 28));
+  --k: var(--ink-2);
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --text: 68ch;
+  --wide: 1120px;
+  --r: 14px;
+  --ease: cubic-bezier(.2, .7, .2, 1);
+}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"]  { color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 400 1.125rem/1.62 var(--font-body); }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 650; line-height: 1.12; letter-spacing: -0.012em; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(2.3rem, 5.2vw, 3.7rem); font-variation-settings: "opsz" 144; }
+h2 { font-size: clamp(1.7rem, 3.2vw, 2.25rem); font-variation-settings: "opsz" 96; margin-bottom: 1rem; }
+h3 { font-size: 1.2rem; margin-bottom: .4rem; }
+p { margin: 0 0 1rem; text-wrap: pretty; }
+a { color: inherit; text-decoration-color: var(--line-2); text-underline-offset: 3px; }
+b, strong { font-weight: 600; }
+.num { font-family: var(--font-mono); font-weight: 500; font-variant-numeric: tabular-nums; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* layout: text at reading width, figures break out to --wide */
+.page { display: grid; padding-bottom: 5rem;
+  grid-template-columns:
+    [full-start] minmax(16px, 1fr)
+    [wide-start] minmax(0, calc((var(--wide) - var(--text)) / 2))
+    [text-start] min(var(--text), 100% - 32px) [text-end]
+    minmax(0, calc((var(--wide) - var(--text)) / 2)) [wide-end]
+    minmax(16px, 1fr) [full-end]; }
+.page > *, .page > section > * { grid-column: text; }
+.page > section { grid-column: full; display: grid; grid-template-columns: subgrid; padding-top: 4.5rem; }
+.page > .wide, .page > section > .wide { grid-column: wide; }
+
+/* header */
+.page-head { padding-top: clamp(3rem, 8vw, 5.5rem); }
+.eyebrow { font: 600 .78rem/1.3 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); margin-bottom: .9rem; }
+.lead { font-size: clamp(1.2rem, 2.2vw, 1.4rem); line-height: 1.5; color: var(--ink-2); margin-top: 1.25rem; max-width: 60ch; }
+.meta { font-size: .875rem; color: var(--ink-3); margin-top: 1rem; }
+
+/* coloured terms: the same hue as that idea in every figure */
+.term { color: var(--k); font-weight: 600; }
+.ref { color: var(--k); font-weight: 600; text-decoration: underline 2px color-mix(in oklch, var(--k) 45%, transparent); text-underline-offset: 4px; cursor: help; border-radius: 3px; }
+.ref:focus-visible { outline: 2px solid var(--k); outline-offset: 2px; }
+
+/* figures */
+figure { margin: 2.25rem 0 1rem; }
+.fig { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: clamp(14px, 2.4vw, 28px); }
+.frame { overflow-x: auto; }
+.frame > svg, .fig svg { display: block; width: 100%; height: auto; }
+.frame > svg { min-width: var(--min, 0px); }
+figcaption { font-size: .9375rem; line-height: 1.5; color: var(--ink-2); margin-top: 1rem; max-width: var(--text); }
+.fig-n { font: 600 .72rem var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); margin-right: .55em; }
+.hero-grid { display: grid; grid-template-columns: 480fr 460fr; gap: clamp(16px, 3vw, 36px); align-items: end; }
+.try { font-size: .9375rem; color: var(--ink-2); margin: .75rem 0 0; }
+.try b { font: 600 .7rem var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); margin: 0 .35em 0 .15em; }
+
+/* svg vocabulary */
+svg text { font-family: var(--font-body); font-size: 15px; fill: var(--ink-2); }
+svg .t-s { font-size: 13px; }
+svg .t-b { font-weight: 600; fill: var(--ink); }
+svg .t-big { font-family: var(--font-display); font-size: 46px; font-weight: 650; }
+svg .t-num { font-family: var(--font-mono); font-weight: 500; }
+svg .t-cap { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .09em; text-transform: uppercase; fill: var(--ink-3); }
+svg .k { fill: var(--k); }
+svg .fk { fill: var(--k); }
+svg .sk { stroke: var(--k); fill: none; }
+svg .tk { fill: color-mix(in srgb, var(--k) 14%, var(--surface)); stroke: var(--k); stroke-width: 1.5; }
+svg .ax { stroke: var(--line-2); stroke-width: 1.5; fill: none; }
+svg .gr { stroke: var(--line); stroke-dasharray: 3 5; fill: none; }
+svg .guide { stroke: var(--k); stroke-width: 1.5; stroke-dasharray: 4 4; fill: none; opacity: .7; }
+svg .ln { stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; fill: none; }
+svg .sunk { fill: var(--sunk); stroke: var(--line-2); stroke-width: 1.5; }
+svg .dim line { stroke: var(--k); stroke-width: 1.5; }
+svg [data-ref] { transition: opacity .25s; }
+
+/* paired bars in HTML: they reflow on a phone and keep body-size text */
+.bars { display: grid; gap: 1.1rem; }
+.bars-ref { margin: 0 0 -.6rem calc(7.5rem + (100% - 7.5rem) * var(--ref)); font: 600 .7rem var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
+.bar-grp { display: grid; grid-template-columns: 6.5rem 1fr; gap: 1rem; align-items: center; }
+.bar-name { margin: 0; font-weight: 600; line-height: 1.2; }
+.bar-name b { display: block; font: 600 1.3rem/1.3 var(--font-mono); color: var(--k); }
+.bar-track { position: relative; display: grid; gap: .35rem; }
+.bar-track::before { content: ""; position: absolute; left: calc(var(--ref) * 100%); top: -.35rem; bottom: -.35rem; border-left: 1.5px dashed var(--line-2); }
+.bar { width: calc(var(--w) * 100%); height: 1.8rem; border-radius: 5px; padding: 0 .6rem; font: 500 .85rem/1.8rem var(--font-mono); white-space: nowrap; transition: width 1s var(--ease); }
+.bar.was { background: color-mix(in srgb, var(--k) 14%, var(--surface)); box-shadow: inset 0 0 0 1.5px var(--k); }
+.bar.now { background: var(--k); color: var(--surface); }
+.js .grow:not(.seen) .bar.now { width: calc(var(--ref) * 100%); }
+.fig:has(.hl) [data-ref]:not(.hl) { opacity: .25; }
+
+/* stepper: the default (no JS, print) is the finished picture */
+.js .stepper [data-s] { transition: opacity .45s var(--ease), transform .45s var(--ease), stroke-dashoffset 1.1s linear; transform-box: fill-box; }
+.js .stepper [data-s]:not(.on) { opacity: 0; transform: translateY(8px); }
+.js .stepper .draw { stroke-dasharray: 1; stroke-dashoffset: 0; }
+.js .stepper .draw:not(.on) { stroke-dashoffset: 1; transform: none; }
+.js .stepper.no-anim [data-s] { transition: none; }
+/* a part with a range (data-s="2-3") leaves before the end, so the no-JS picture drops it */
+html:not(.js) .stepper [data-s*="-"] { display: none; }
+
+/* before / after: the markup's data-state is what no-JS and print show */
+.only-before, .only-after { transition: opacity .45s var(--ease), transform .55s var(--ease), visibility .45s; transform-box: fill-box; }
+/* visibility takes the hidden state out of the accessibility tree; its transition lets the fade finish first */
+figure[data-state="before"] .only-after, figure[data-state="after"] .only-before { opacity: 0; visibility: hidden; }
+.tok { opacity: 0; transition: opacity .2s; }
+.tok.run { opacity: 1; }
+.step-caps { list-style: none; counter-reset: s; padding: 0; margin: 1.1rem 0 0; display: grid; gap: .45rem; max-width: var(--text); }
+.step-caps li { counter-increment: s; display: grid; grid-template-columns: 1.75rem 1fr; gap: .7rem; align-items: start; font-size: 1rem; line-height: 1.5; color: var(--ink-2); }
+.step-caps li::before { content: counter(s); font: 600 .78rem/1.6rem var(--font-mono); text-align: center; height: 1.6rem; border-radius: 50%; border: 1.5px solid var(--line-2); color: var(--ink-3); }
+.js .step-caps li { cursor: pointer; opacity: .5; transition: opacity .3s; }
+.js .step-caps li.past { opacity: .72; }
+.js .step-caps li.now { opacity: 1; color: var(--ink); }
+.js .step-caps li.now::before { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.player { display: none; }
+.js .player { display: flex; align-items: center; gap: .5rem; margin-top: 1.1rem; }
+.player input[type="range"] { flex: 1; min-width: 80px; accent-color: var(--ink); }
+.player .count { font: 500 .85rem var(--font-mono); color: var(--ink-3); min-width: 3.2rem; text-align: right; }
+
+/* buttons and controls (JS only: without JS the page shows the default state) */
+.btn { font: 500 .9375rem/1 var(--font-body); color: var(--ink); background: var(--surface); border: 1px solid var(--line-2); border-radius: 999px; padding: .6rem 1rem; cursor: pointer; transition: background .2s, border-color .2s, color .2s; }
+.btn:hover { border-color: var(--ink-3); }
+.btn:focus-visible, input:focus-visible, summary:focus-visible, figure:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+.btn[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.btn[aria-disabled="true"] { opacity: .35; cursor: default; }
+.btn.icon { width: 2.4rem; height: 2.4rem; padding: 0; font-size: 1.25rem; display: grid; place-items: center; }
+.controls, .seg, .choices, .tools { display: none; }
+.js .controls { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1.5rem; margin-top: 1.25rem; }
+.js .seg { display: inline-flex; flex-wrap: wrap; gap: .4rem; margin-bottom: 1rem; }
+.slider { display: flex; align-items: center; gap: .9rem; flex: 1 1 320px; font-weight: 500; }
+.slider input { flex: 1; accent-color: var(--k); min-width: 120px; }
+.slider output { font: 600 1.15rem var(--font-mono); color: var(--k); min-width: 3.6ch; text-align: right; }
+.readout { font-size: 1.2rem; line-height: 1.5; margin: 1rem 0 0; max-width: var(--text); }
+.readout b { font-family: var(--font-mono); font-weight: 600; }
+.tools { position: fixed; top: 12px; right: 12px; z-index: 10; gap: .4rem; }
+.js .tools { display: flex; }
+.tools .btn { padding: .5rem .8rem; font-size: .8rem; }
+
+/* terms strip */
+.terms { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; margin: 2.5rem 0 0; }
+.terms > div { background: var(--surface); padding: 1rem 1.15rem; }
+.terms dt { font-weight: 600; color: var(--k); display: flex; align-items: center; gap: .5rem; }
+.terms dt::before { content: ""; width: .7rem; height: .7rem; border-radius: 50%; background: var(--k); flex: none; }
+.terms dd { margin: .25rem 0 0; font-size: .9375rem; line-height: 1.45; color: var(--ink-2); }
+
+/* notes: typed callouts */
+:where(.note) { --k: var(--ink-2); }
+.note { background: color-mix(in srgb, var(--k) 7%, var(--surface)); border: 1px solid color-mix(in srgb, var(--k) 30%, var(--line)); border-radius: var(--r); padding: 1.1rem 1.3rem; margin: 1.75rem 0; }
+.note p:last-child { margin-bottom: 0; }
+.tag { display: block; font: 600 .72rem/1.2 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--k); margin-bottom: .45rem; }
+/* a key note takes the colour of the concept it is about: class="note key c-wait" */
+:where(.note.key) { --k: var(--ink); }
+.note.key { border-width: 1.5px; }
+.note.key .tag { color: var(--k); }
+.note.myth { --k: var(--risk); }
+.note.watch { --k: var(--warn); }
+.note .fact { --k: var(--ok); color: var(--ok); margin-top: .9rem; }
+.note.myth > p:first-of-type { text-decoration: line-through; text-decoration-color: color-mix(in oklch, var(--risk) 60%, transparent); text-decoration-thickness: 2px; }
+
+/* predict, then reveal */
+.predict { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 1.25rem 1.35rem; margin: 1.75rem 0; }
+.predict .q { font-size: 1.1rem; margin-bottom: 1rem; }
+.js .choices { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+.choices .btn { font-family: var(--font-mono); }
+.answered .choices .right { background: var(--ok); border-color: var(--ok); color: var(--surface); }
+.answered .choices .picked:not(.right) { text-decoration: line-through; border-color: var(--risk); color: var(--risk); }
+.answered .choices .btn[aria-pressed="true"].right::after { content: "  ✓"; }
+
+details { border-top: 1px solid var(--line); padding-top: .8rem; }
+details + details { margin-top: .6rem; }
+summary { cursor: pointer; font-weight: 600; list-style: none; display: flex; align-items: center; gap: .55rem; }
+summary::-webkit-details-marker { display: none; }
+summary::before { content: "+"; font: 600 1rem/1.3rem var(--font-mono); width: 1.4rem; height: 1.4rem; text-align: center; border-radius: 50%; border: 1.5px solid var(--line-2); color: var(--ink-3); flex: none; transition: transform .2s; }
+details[open] > summary::before { content: "−"; }
+details > :not(summary) { margin-top: .75rem; }
+.page > section > details { margin-top: 1.5rem; }
+math { font-size: 1.2em; }
+
+/* lists that carry structure */
+.limits { list-style: none; padding: 0; margin: 1.5rem 0; display: grid; gap: .9rem; }
+.limits li { display: grid; grid-template-columns: auto 1fr; gap: .8rem; }
+.limits li::before { content: "↯"; font: 600 1rem/1.6 var(--font-mono); color: var(--warn); }
+
+/* recap */
+.recap-box { background: var(--ink); color: var(--bg); border-radius: calc(var(--r) + 4px); padding: clamp(1.5rem, 4vw, 2.5rem); }
+.recap-box .eyebrow { color: color-mix(in oklch, var(--bg) 65%, var(--ink)); }
+.recap-box h2 { color: var(--bg); }
+.recap-box ol { margin: 0; padding-left: 1.3rem; display: grid; gap: .6rem; font-size: 1.1rem; }
+.recap-box ol li::marker { font: 600 .9rem var(--font-mono); }
+.recap-box .next { margin: 1.5rem 0 0; padding-top: 1.1rem; border-top: 1px solid color-mix(in oklch, var(--bg) 25%, var(--ink)); }
+.sources { font-size: .875rem; color: var(--ink-3); }
+.sources ul { padding-left: 1.1rem; }
+
+/* motion off: reduced-motion users and the page-wide pause */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+.motion-off *, .motion-off *::before, .motion-off *::after { animation: none !important; transition: none !important; }
+
+@media (max-width: 760px) {
+  body { font-size: 1.0625rem; }
+  .page > section { padding-top: 3.25rem; }
+  .frame > svg { min-width: var(--min-phone, var(--min, 0px)); }
+  .hero-grid { grid-template-columns: 1fr; }
+  /* wide figures go edge to edge on a phone: every pixel of width is label size */
+  .page > .fig.wide, .page > section > .fig.wide { grid-column: full; border-radius: 0; border-inline: 0; padding: 14px 8px; }
+  .fig.wide > :not(.frame, .hero-grid) { margin-inline: 8px; }
+}
+@media print {
+  :root { color-scheme: light; }
+  body { background: #fff; font-size: 11pt; }
+  .tools, .player, .controls, .seg, .choices { display: none !important; }
+  .tok { display: none; }
+  figure, .note, .predict, .recap-box { break-inside: avoid; }
+  header + figure { break-inside: auto; } /* the hero starts on page 1 */
+  .page > section { padding-top: 2rem; }
+  * { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+<div class="tools" role="toolbar" aria-label="Page controls">
+  <button type="button" class="btn" data-action="motion" aria-pressed="false">Pause motion</button>
+  <button type="button" class="btn" data-action="theme">Light / dark</button>
+</div>
+
+<main class="page">
+  <header class="page-head">
+    <p class="eyebrow">Release · colour, access and one real test</p>
+    <h1>eli15 0.1.0-alpha.2</h1>
+    <p class="lead">alpha.2 moves two status hues in the <span class="term c-kit">kit</span> so every concept colour sits at least 30° from every status colour, up from 20° for the busy orange. It stops a before/after toggle from leaving its hidden side in the accessibility tree, and adds one test that runs the real <span class="term c-gate">gate</span>, the real <span class="term c-check">check</span> and Chrome. The suite is now 10 tests.</p>
+    <p class="meta">Released 2026-10-29 as a pre-release. The diff covers <code>8260780..83dde17</code>: 9 files, 88 lines added, 15 removed. Hue distances are computed from the oklch values in <code>template.html</code> before and after.</p>
+  </header>
+
+  <section id="background" aria-labelledby="h-background">
+    <p class="eyebrow">Background</p>
+    <h2 id="h-background">The busy orange sat 20° from the warning colour</h2>
+    <figure class="fig wide" id="hero" data-state="after" aria-describedby="f1-cap">
+      <div class="seg" role="group" aria-label="Which hues" data-toggle>
+        <button type="button" class="btn" data-state="before" aria-pressed="false">alpha.1 hues</button>
+        <button type="button" class="btn" data-state="after" aria-pressed="true">alpha.2 hues</button>
+      </div>
+      <div class="hero-grid"><svg viewBox="0 0 520 450" role="img" aria-label="The oklch hue wheel in light mode. Faded arcs are the 30 degree keep-out zones around the status hues risk 28, warn and ok. In alpha.1, warn at 80 put busy at 60 inside its zone, 20 degrees away, and ok at 150 put serve at 178 inside its zone, 28 degrees away. In alpha.2, warn is at 90 and ok at 145, so busy is 30 degrees from warn and serve is 33 from ok."><path class="wd" style="--h:2.5" d="M398,222 A138,138 0 0 1 397.5,234 L355.6,230.4 A96,96 0 0 0 356,222 Z"/><path class="wd" style="--h:7.5" d="M397.5,234 A138,138 0 0 1 395.9,246 L354.5,238.7 A96,96 0 0 0 355.6,230.4 Z"/><path class="wd" style="--h:12.5" d="M395.9,246 A138,138 0 0 1 393.3,257.7 L352.7,246.8 A96,96 0 0 0 354.5,238.7 Z"/><path class="wd" style="--h:17.5" d="M393.3,257.7 A138,138 0 0 1 389.7,269.2 L350.2,254.8 A96,96 0 0 0 352.7,246.8 Z"/><path class="wd" style="--h:22.5" d="M389.7,269.2 A138,138 0 0 1 385.1,280.3 L347,262.6 A96,96 0 0 0 350.2,254.8 Z"/><path class="wd" style="--h:27.5" d="M385.1,280.3 A138,138 0 0 1 379.5,291 L343.1,270 A96,96 0 0 0 347,262.6 Z"/><path class="wd" style="--h:32.5" d="M379.5,291 A138,138 0 0 1 373,301.2 L338.6,277.1 A96,96 0 0 0 343.1,270 Z"/><path class="wd" style="--h:37.5" d="M373,301.2 A138,138 0 0 1 365.7,310.7 L333.5,283.7 A96,96 0 0 0 338.6,277.1 Z"/><path class="wd" style="--h:42.5" d="M365.7,310.7 A138,138 0 0 1 357.6,319.6 L327.9,289.9 A96,96 0 0 0 333.5,283.7 Z"/><path class="wd" style="--h:47.5" d="M357.6,319.6 A138,138 0 0 1 348.7,327.7 L321.7,295.5 A96,96 0 0 0 327.9,289.9 Z"/><path class="wd" style="--h:52.5" d="M348.7,327.7 A138,138 0 0 1 339.2,335 L315.1,300.6 A96,96 0 0 0 321.7,295.5 Z"/><path class="wd" style="--h:57.5" d="M339.2,335 A138,138 0 0 1 329,341.5 L308,305.1 A96,96 0 0 0 315.1,300.6 Z"/><path class="wd" style="--h:62.5" d="M329,341.5 A138,138 0 0 1 318.3,347.1 L300.6,309 A96,96 0 0 0 308,305.1 Z"/><path class="wd" style="--h:67.5" d="M318.3,347.1 A138,138 0 0 1 307.2,351.7 L292.8,312.2 A96,96 0 0 0 300.6,309 Z"/><path class="wd" style="--h:72.5" d="M307.2,351.7 A138,138 0 0 1 295.7,355.3 L284.8,314.7 A96,96 0 0 0 292.8,312.2 Z"/><path class="wd" style="--h:77.5" d="M295.7,355.3 A138,138 0 0 1 284,357.9 L276.7,316.5 A96,96 0 0 0 284.8,314.7 Z"/><path class="wd" style="--h:82.5" d="M284,357.9 A138,138 0 0 1 272,359.5 L268.4,317.6 A96,96 0 0 0 276.7,316.5 Z"/><path class="wd" style="--h:87.5" d="M272,359.5 A138,138 0 0 1 260,360 L260,318 A96,96 0 0 0 268.4,317.6 Z"/><path class="wd" style="--h:92.5" d="M260,360 A138,138 0 0 1 248,359.5 L251.6,317.6 A96,96 0 0 0 260,318 Z"/><path class="wd" style="--h:97.5" d="M248,359.5 A138,138 0 0 1 236,357.9 L243.3,316.5 A96,96 0 0 0 251.6,317.6 Z"/><path class="wd" style="--h:102.5" d="M236,357.9 A138,138 0 0 1 224.3,355.3 L235.2,314.7 A96,96 0 0 0 243.3,316.5 Z"/><path class="wd" style="--h:107.5" d="M224.3,355.3 A138,138 0 0 1 212.8,351.7 L227.2,312.2 A96,96 0 0 0 235.2,314.7 Z"/><path class="wd" style="--h:112.5" d="M212.8,351.7 A138,138 0 0 1 201.7,347.1 L219.4,309 A96,96 0 0 0 227.2,312.2 Z"/><path class="wd" style="--h:117.5" d="M201.7,347.1 A138,138 0 0 1 191,341.5 L212,305.1 A96,96 0 0 0 219.4,309 Z"/><path class="wd" style="--h:122.5" d="M191,341.5 A138,138 0 0 1 180.8,335 L204.9,300.6 A96,96 0 0 0 212,305.1 Z"/><path class="wd" style="--h:127.5" d="M180.8,335 A138,138 0 0 1 171.3,327.7 L198.3,295.5 A96,96 0 0 0 204.9,300.6 Z"/><path class="wd" style="--h:132.5" d="M171.3,327.7 A138,138 0 0 1 162.4,319.6 L192.1,289.9 A96,96 0 0 0 198.3,295.5 Z"/><path class="wd" style="--h:137.5" d="M162.4,319.6 A138,138 0 0 1 154.3,310.7 L186.5,283.7 A96,96 0 0 0 192.1,289.9 Z"/><path class="wd" style="--h:142.5" d="M154.3,310.7 A138,138 0 0 1 147,301.2 L181.4,277.1 A96,96 0 0 0 186.5,283.7 Z"/><path class="wd" style="--h:147.5" d="M147,301.2 A138,138 0 0 1 140.5,291 L176.9,270 A96,96 0 0 0 181.4,277.1 Z"/><path class="wd" style="--h:152.5" d="M140.5,291 A138,138 0 0 1 134.9,280.3 L173,262.6 A96,96 0 0 0 176.9,270 Z"/><path class="wd" style="--h:157.5" d="M134.9,280.3 A138,138 0 0 1 130.3,269.2 L169.8,254.8 A96,96 0 0 0 173,262.6 Z"/><path class="wd" style="--h:162.5" d="M130.3,269.2 A138,138 0 0 1 126.7,257.7 L167.3,246.8 A96,96 0 0 0 169.8,254.8 Z"/><path class="wd" style="--h:167.5" d="M126.7,257.7 A138,138 0 0 1 124.1,246 L165.5,238.7 A96,96 0 0 0 167.3,246.8 Z"/><path class="wd" style="--h:172.5" d="M124.1,246 A138,138 0 0 1 122.5,234 L164.4,230.4 A96,96 0 0 0 165.5,238.7 Z"/><path class="wd" style="--h:177.5" d="M122.5,234 A138,138 0 0 1 122,222 L164,222 A96,96 0 0 0 164.4,230.4 Z"/><path class="wd" style="--h:182.5" d="M122,222 A138,138 0 0 1 122.5,210 L164.4,213.6 A96,96 0 0 0 164,222 Z"/><path class="wd" style="--h:187.5" d="M122.5,210 A138,138 0 0 1 124.1,198 L165.5,205.3 A96,96 0 0 0 164.4,213.6 Z"/><path class="wd" style="--h:192.5" d="M124.1,198 A138,138 0 0 1 126.7,186.3 L167.3,197.2 A96,96 0 0 0 165.5,205.3 Z"/><path class="wd" style="--h:197.5" d="M126.7,186.3 A138,138 0 0 1 130.3,174.8 L169.8,189.2 A96,96 0 0 0 167.3,197.2 Z"/><path class="wd" style="--h:202.5" d="M130.3,174.8 A138,138 0 0 1 134.9,163.7 L173,181.4 A96,96 0 0 0 169.8,189.2 Z"/><path class="wd" style="--h:207.5" d="M134.9,163.7 A138,138 0 0 1 140.5,153 L176.9,174 A96,96 0 0 0 173,181.4 Z"/><path class="wd" style="--h:212.5" d="M140.5,153 A138,138 0 0 1 147,142.8 L181.4,166.9 A96,96 0 0 0 176.9,174 Z"/><path class="wd" style="--h:217.5" d="M147,142.8 A138,138 0 0 1 154.3,133.3 L186.5,160.3 A96,96 0 0 0 181.4,166.9 Z"/><path class="wd" style="--h:222.5" d="M154.3,133.3 A138,138 0 0 1 162.4,124.4 L192.1,154.1 A96,96 0 0 0 186.5,160.3 Z"/><path class="wd" style="--h:227.5" d="M162.4,124.4 A138,138 0 0 1 171.3,116.3 L198.3,148.5 A96,96 0 0 0 192.1,154.1 Z"/><path class="wd" style="--h:232.5" d="M171.3,116.3 A138,138 0 0 1 180.8,109 L204.9,143.4 A96,96 0 0 0 198.3,148.5 Z"/><path class="wd" style="--h:237.5" d="M180.8,109 A138,138 0 0 1 191,102.5 L212,138.9 A96,96 0 0 0 204.9,143.4 Z"/><path class="wd" style="--h:242.5" d="M191,102.5 A138,138 0 0 1 201.7,96.9 L219.4,135 A96,96 0 0 0 212,138.9 Z"/><path class="wd" style="--h:247.5" d="M201.7,96.9 A138,138 0 0 1 212.8,92.3 L227.2,131.8 A96,96 0 0 0 219.4,135 Z"/><path class="wd" style="--h:252.5" d="M212.8,92.3 A138,138 0 0 1 224.3,88.7 L235.2,129.3 A96,96 0 0 0 227.2,131.8 Z"/><path class="wd" style="--h:257.5" d="M224.3,88.7 A138,138 0 0 1 236,86.1 L243.3,127.5 A96,96 0 0 0 235.2,129.3 Z"/><path class="wd" style="--h:262.5" d="M236,86.1 A138,138 0 0 1 248,84.5 L251.6,126.4 A96,96 0 0 0 243.3,127.5 Z"/><path class="wd" style="--h:267.5" d="M248,84.5 A138,138 0 0 1 260,84 L260,126 A96,96 0 0 0 251.6,126.4 Z"/><path class="wd" style="--h:272.5" d="M260,84 A138,138 0 0 1 272,84.5 L268.4,126.4 A96,96 0 0 0 260,126 Z"/><path class="wd" style="--h:277.5" d="M272,84.5 A138,138 0 0 1 284,86.1 L276.7,127.5 A96,96 0 0 0 268.4,126.4 Z"/><path class="wd" style="--h:282.5" d="M284,86.1 A138,138 0 0 1 295.7,88.7 L284.8,129.3 A96,96 0 0 0 276.7,127.5 Z"/><path class="wd" style="--h:287.5" d="M295.7,88.7 A138,138 0 0 1 307.2,92.3 L292.8,131.8 A96,96 0 0 0 284.8,129.3 Z"/><path class="wd" style="--h:292.5" d="M307.2,92.3 A138,138 0 0 1 318.3,96.9 L300.6,135 A96,96 0 0 0 292.8,131.8 Z"/><path class="wd" style="--h:297.5" d="M318.3,96.9 A138,138 0 0 1 329,102.5 L308,138.9 A96,96 0 0 0 300.6,135 Z"/><path class="wd" style="--h:302.5" d="M329,102.5 A138,138 0 0 1 339.2,109 L315.1,143.4 A96,96 0 0 0 308,138.9 Z"/><path class="wd" style="--h:307.5" d="M339.2,109 A138,138 0 0 1 348.7,116.3 L321.7,148.5 A96,96 0 0 0 315.1,143.4 Z"/><path class="wd" style="--h:312.5" d="M348.7,116.3 A138,138 0 0 1 357.6,124.4 L327.9,154.1 A96,96 0 0 0 321.7,148.5 Z"/><path class="wd" style="--h:317.5" d="M357.6,124.4 A138,138 0 0 1 365.7,133.3 L333.5,160.3 A96,96 0 0 0 327.9,154.1 Z"/><path class="wd" style="--h:322.5" d="M365.7,133.3 A138,138 0 0 1 373,142.8 L338.6,166.9 A96,96 0 0 0 333.5,160.3 Z"/><path class="wd" style="--h:327.5" d="M373,142.8 A138,138 0 0 1 379.5,153 L343.1,174 A96,96 0 0 0 338.6,166.9 Z"/><path class="wd" style="--h:332.5" d="M379.5,153 A138,138 0 0 1 385.1,163.7 L347,181.4 A96,96 0 0 0 343.1,174 Z"/><path class="wd" style="--h:337.5" d="M385.1,163.7 A138,138 0 0 1 389.7,174.8 L350.2,189.2 A96,96 0 0 0 347,181.4 Z"/><path class="wd" style="--h:342.5" d="M389.7,174.8 A138,138 0 0 1 393.3,186.3 L352.7,197.2 A96,96 0 0 0 350.2,189.2 Z"/><path class="wd" style="--h:347.5" d="M393.3,186.3 A138,138 0 0 1 395.9,198 L354.5,205.3 A96,96 0 0 0 352.7,197.2 Z"/><path class="wd" style="--h:352.5" d="M395.9,198 A138,138 0 0 1 397.5,210 L355.6,213.6 A96,96 0 0 0 354.5,205.3 Z"/><path class="wd" style="--h:357.5" d="M397.5,210 A138,138 0 0 1 398,222 L356,222 A96,96 0 0 0 355.6,213.6 Z"/><g class="only-before"><path d="M397.9,217.2 A138,138 0 0 1 212.8,351.7 L227.2,312.2 A96,96 0 0 0 355.9,218.6 Z" fill="var(--surface)" opacity=".74"/><path d="M191,341.5 A138,138 0 0 1 122,222 L164,222 A96,96 0 0 0 212,305.1 Z" fill="var(--surface)" opacity=".74"/><g style="--k: var(--warn)"><path class="sk" d="M362.8,344.6 A160,160 0 0 1 205.3,372.4" stroke-width="5"/><line x1="276" y1="312.6" x2="284.7" y2="361.8" stroke="var(--k)" stroke-width="3.5"/><text class="k" style="" x="291.3" y="416.3" text-anchor="middle"><tspan class="t-b">warn</tspan> <tspan class="t-num">80°</tspan> ↯</text></g><g style="--k: var(--ok)"><path class="sk" d="M185,351.9 A150,150 0 0 1 110,222" stroke-width="5"/><line x1="180.3" y1="268" x2="137" y2="293" stroke="var(--k)" stroke-width="3.5"/><text class="k" style="" x="104.1" y="317" text-anchor="end"><tspan class="t-b">ok</tspan> <tspan class="t-num">150°</tspan> ✓</text></g></g><g class="only-after"><path d="M397.9,217.2 A138,138 0 0 1 333.1,339 L310.9,303.4 A96,96 0 0 0 355.9,218.6 Z" fill="var(--surface)" opacity=".74"/><path d="M329,341.5 A138,138 0 0 1 122.5,234 L164.4,230.4 A96,96 0 0 0 308,305.1 Z" fill="var(--surface)" opacity=".74"/><g style="--k: var(--warn)"><path class="sk" d="M340,360.6 A160,160 0 0 1 180,360.6" stroke-width="5"/><line x1="260" y1="314" x2="260" y2="364" stroke="var(--k)" stroke-width="3.5"/><text class="k" style="" x="260" y="419" text-anchor="middle"><tspan class="t-b">warn</tspan> <tspan class="t-num">90°</tspan> ↯</text></g><g style="--k: var(--ok)"><path class="sk" d="M196.6,357.9 A150,150 0 0 1 110.6,235.1" stroke-width="5"/><line x1="184.6" y1="274.8" x2="143.7" y2="303.4" stroke="var(--k)" stroke-width="3.5"/><text class="k" style="" x="112.6" y="342.2" text-anchor="end"><tspan class="t-b">ok</tspan> <tspan class="t-num">145°</tspan> ✓</text></g></g><g style="--k: var(--risk)"><path class="sk" d="M409.9,216.8 A150,150 0 0 1 339.5,349.2" stroke-width="5"/><line x1="341.2" y1="265.2" x2="385.4" y2="288.7" stroke="var(--k)" stroke-width="3.5"/><text class="k" style="" x="418.9" y="311.5" text-anchor="start"><tspan class="t-b">risk</tspan> <tspan class="t-num">28°</tspan> ✗</text></g><circle cx="223.8" cy="110.7" r="9.5" style="fill: light-dark(oklch(54% 0.16 252), oklch(74% 0.12 252)); stroke: var(--surface); stroke-width: 3"/><circle cx="143.1" cy="226.1" r="9.5" style="fill: light-dark(oklch(54% 0.11 178), oklch(77% 0.1 178)); stroke: var(--surface); stroke-width: 3"/><circle cx="318.5" cy="323.3" r="9.5" style="fill: light-dark(oklch(64% 0.16 60), oklch(80% 0.13 70)); stroke: var(--surface); stroke-width: 3"/><circle cx="375.9" cy="205.7" r="9.5" style="fill: light-dark(oklch(55% 0.2 352), oklch(74% 0.15 352)); stroke: var(--surface); stroke-width: 3"/><text class="" style="fill: light-dark(oklch(54% 0.16 252), oklch(74% 0.12 252))" x="204.4" y="49.8" text-anchor="end"><tspan class="t-b">arrive</tspan> <tspan class="t-num">252°</tspan></text><text class="" style="fill: light-dark(oklch(54% 0.11 178), oklch(77% 0.1 178))" x="80.1" y="233.3" text-anchor="end"><tspan class="t-b">serve</tspan> <tspan class="t-num">178°</tspan></text><text class="" style="fill: light-dark(oklch(64% 0.16 60), oklch(80% 0.13 70))" x="350" y="394.9" text-anchor="start"><tspan class="t-b">busy</tspan> <tspan class="t-num">60°</tspan></text><text class="" style="fill: light-dark(oklch(55% 0.2 352), oklch(74% 0.15 352))" x="438.2" y="201.9" text-anchor="start"><tspan class="t-b">wait</tspan> <tspan class="t-num">352°</tspan></text><g class="only-before"><path d="M304,298.2 A88,88 0 0 1 275.3,308.7" fill="none" stroke="var(--risk)" stroke-width="6"/><text class="t-big" style="fill:var(--risk)" x="260" y="228" text-anchor="middle">20°</text><text x="260" y="254" text-anchor="middle">busy to warn</text><text class="t-b" style="fill:var(--risk)" x="260" y="278" text-anchor="middle">✗ under 30°</text></g><g class="only-after"><path d="M304,298.2 A88,88 0 0 1 260,310" fill="none" stroke="var(--ok)" stroke-width="6"/><text class="t-big" style="fill:var(--ok)" x="260" y="228" text-anchor="middle">30°</text><text x="260" y="254" text-anchor="middle">busy to warn</text><text class="t-b" style="fill:var(--ok)" x="260" y="278" text-anchor="middle">✓ 30° or more</text></g></svg><svg viewBox="0 0 460 450" role="img" aria-label="Distance from each template concept hue to the nearest status hue, with a dashed line at 30 degrees. In alpha.1, busy was 20 degrees from warn and serve 28 degrees from ok, both under 30. In alpha.2, busy is 30 from warn and serve 33 from ok; wait is 36 from risk and arrive 107 from ok."><text class="t-b" x="190" y="22">distance to the nearest status hue</text><text x="190" y="44">degrees, light mode</text><line class="ax" x1="190" y1="58" x2="190" y2="412"/><line x1="244" y1="58" x2="244" y2="412" stroke="var(--ink-3)" stroke-width="1.5" stroke-dasharray="5 5"/><text class="t-b" x="250" y="428">30° minimum</text><g class="only-before"><text class="t-b" style="fill:light-dark(oklch(64% 0.16 60), oklch(80% 0.13 70))" x="0" y="100">busy 60°</text><rect x="190" y="83" width="36" height="22" rx="4" style="fill: var(--risk)"/><text class="t-num t-b" style="fill:var(--risk)" x="252" y="100">20° ✗</text><text x="0" y="128">to warn 80°</text></g><g class="only-after"><text class="t-b" style="fill:light-dark(oklch(64% 0.16 60), oklch(80% 0.13 70))" x="0" y="100">busy 60°</text><rect x="190" y="83" width="54" height="22" rx="4" style="fill: var(--ok)"/><text class="t-num t-b" style="fill:var(--ok)" x="252" y="100">30° ✓</text><text x="0" y="128">to warn 90°</text></g><g class="only-before"><text class="t-b" style="fill:light-dark(oklch(54% 0.11 178), oklch(77% 0.1 178))" x="0" y="188">serve 178°</text><rect x="190" y="171" width="50.4" height="22" rx="4" style="fill: var(--risk)"/><text class="t-num t-b" style="fill:var(--risk)" x="252" y="188">28° ✗</text><text x="0" y="216">to ok 150°</text></g><g class="only-after"><text class="t-b" style="fill:light-dark(oklch(54% 0.11 178), oklch(77% 0.1 178))" x="0" y="188">serve 178°</text><rect x="190" y="171" width="59.4" height="22" rx="4" style="fill: var(--ok)"/><text class="t-num t-b" style="fill:var(--ok)" x="257.4" y="188">33° ✓</text><text x="0" y="216">to ok 145°</text></g><g><text class="t-b" style="fill:light-dark(oklch(55% 0.2 352), oklch(74% 0.15 352))" x="0" y="276">wait 352°</text><rect x="190" y="259" width="64.8" height="22" rx="4" style="fill: var(--ok)"/><text class="t-num t-b" style="fill:var(--ok)" x="262.8" y="276">36° ✓</text><text x="0" y="304">to risk 28°</text></g><g class="only-before"><text class="t-b" style="fill:light-dark(oklch(54% 0.16 252), oklch(74% 0.12 252))" x="0" y="364">arrive 252°</text><rect x="190" y="347" width="183.6" height="22" rx="4" style="fill: var(--ok)"/><text class="t-num t-b" style="fill:var(--ok)" x="381.6" y="364">102° ✓</text><text x="0" y="392">to ok 150°</text></g><g class="only-after"><text class="t-b" style="fill:light-dark(oklch(54% 0.16 252), oklch(74% 0.12 252))" x="0" y="364">arrive 252°</text><rect x="190" y="347" width="192.6" height="22" rx="4" style="fill: var(--ok)"/><text class="t-num t-b" style="fill:var(--ok)" x="390.6" y="364">107° ✓</text><text x="0" y="392">to ok 145°</text></g></svg></div>
+      <figcaption id="f1-cap"><span class="fig-n">Fig. 1</span>The oklch hue wheel in light mode, hue in degrees clockwise from the right. Faded arcs are the 30° zones around risk, warn and ok. In alpha.1 the busy dot sat 20° from warn and the serve dot 28° from ok, both inside a zone (✗). In alpha.2 warn moved from 80 to 90 and ok from 150 to 145: busy is 30° away and serve 33° (✓). In dark mode warn moved from 85 to 100 and busy sits at 70, so that gap went from 15° to 30°.</figcaption>
+    </figure>
+
+    <dl class="terms wide" aria-label="The four parts">
+      <div class="c-guide"><dt>Guidance</dt><dd>SKILL.md and three references: four files, +19 −8.</dd></div>
+      <div class="c-kit"><dt>Kit</dt><dd>template.html: two status hues and one visibility rule, +5 −4.</dd></div>
+      <div class="c-check"><dt>Check</dt><dd>check.py: the demo-text scan skips inline code, +2 −1.</dd></div>
+      <div class="c-gate"><dt>Gate</dt><dd>gate.py is untouched; test_gate.py gains one end-to-end test, +32 −1.</dd></div>
+    </dl>
+
+    <p>eli15 pages use two kinds of colour. A <b>concept colour</b> belongs to one idea on the page. A <b>status colour</b> (risk, warn, ok) means wrong, caution or right and nothing else. A colour's hue is its place on the wheel in degrees: 28 is red-orange, 90 yellow, 145 green, 252 blue, roughly.</p>
+    <p>alpha.1 asked concepts to stay 30° from risk only. Two pairs were still too close: busy and warn at 20° (60 against 80), and serve and ok at 28° (178 against 150). A reader who sees orange in a figure should not have to ask whether it means caution. alpha.2 moves the two status hues and leaves the template's four concept hues where they were, so pages copied from the template keep their colours.</p>
+  </section>
+
+  <section id="diagram" aria-labelledby="h-diagram">
+    <p class="eyebrow">Change diagram</p>
+    <h2 id="h-diagram">Nine files changed, and the gate script was not one of them</h2>
+    <figure class="fig wide" aria-describedby="f2-cap">
+      <div class="frame" style="--min: 720px; --min-phone: 800px"><svg viewBox="0 0 960 500" role="img" aria-label="Map of the nine changed files by part. Guidance: SKILL.md plus 2 minus 1, explainer-craft.md plus 4, motion-and-interaction.md plus 2 minus 1, visual-system.md plus 11 minus 6. Kit: template.html plus 5 minus 4. Check: check.py plus 2 minus 1. Gate: test_gate.py plus 32 minus 1; gate.py is unchanged. Release notes: CHANGELOG.md plus 29, the alpha.1 page plus 1 minus 1."><defs><marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-3)"/></marker></defs><text class="t-b k c-guide" x="0" y="20">GUIDANCE</text><g class="c-guide"><rect class="tk" x="0" y="32" width="290" height="72" rx="8"/><text class="t-b" x="12" y="56">SKILL.md</text><text class="t-s" x="12" y="74">+2 −1 · 100 lines</text><rect class="fk" x="12" y="84" width="16" height="8" rx="2"/><rect class="rm" x="31" y="84" width="8" height="8" rx="2"/></g><g class="c-guide"><rect class="tk" x="0" y="114" width="290" height="72" rx="8"/><text class="t-b" x="12" y="138">explainer-craft.md</text><text class="t-s" x="12" y="156">+4 −0 · 178 lines</text><rect class="fk" x="12" y="166" width="32" height="8" rx="2"/></g><g class="c-guide"><rect class="tk" x="0" y="196" width="290" height="72" rx="8"/><text class="t-b" x="12" y="220">motion-and-interaction.md</text><text class="t-s" x="12" y="238">+2 −1 · 195 lines</text><rect class="fk" x="12" y="248" width="16" height="8" rx="2"/><rect class="rm" x="31" y="248" width="8" height="8" rx="2"/></g><g class="c-guide"><rect class="tk" x="0" y="278" width="290" height="72" rx="8"/><text class="t-b" x="12" y="302">visual-system.md</text><text class="t-s" x="12" y="320">+11 −6 · 191 lines</text><rect class="fk" x="12" y="330" width="88" height="8" rx="2"/><rect class="rm" x="103" y="330" width="48" height="8" rx="2"/></g><text class="t-b k c-kit" x="335" y="20">KIT</text><g class="c-kit"><rect class="tk" x="335" y="32" width="290" height="72" rx="8"/><text class="t-b" x="347" y="56">template.html</text><text class="t-s" x="347" y="74">+5 −4 · 744 lines</text><rect class="fk" x="347" y="84" width="40" height="8" rx="2"/><rect class="rm" x="390" y="84" width="32" height="8" rx="2"/></g><text class="t-b k c-check" x="335" y="138">CHECK</text><g class="c-check"><rect class="tk" x="335" y="150" width="290" height="72" rx="8"/><text class="t-b" x="347" y="174">check.py</text><text class="t-s" x="347" y="192">+2 −1 · 384 lines</text><rect class="fk" x="347" y="202" width="16" height="8" rx="2"/><rect class="rm" x="366" y="202" width="8" height="8" rx="2"/></g><text class="t-b k c-gate" x="670" y="20">GATE</text><g class="c-gate"><rect class="tk" x="670" y="32" width="290" height="72" rx="8"/><text class="t-b" x="682" y="56">test_gate.py</text><text class="t-s" x="682" y="74">+32 −1 · 147 lines</text><rect class="fk" x="682" y="84" width="256" height="8" rx="2"/><rect class="rm" x="941" y="84" width="8" height="8" rx="2"/></g><g class="c-gate"><rect class="ho" x="670" y="150" width="290" height="72" rx="8"/><text class="t-b ho-t" x="682" y="174">gate.py</text><text class="ho-t" x="682" y="196">0 lines changed · 154 lines</text></g><g fill="none" stroke="var(--ink-3)" stroke-width="2" marker-end="url(#ah2)"><path d="M815,106 V146"/><path d="M666,186 H629"/></g><text x="825" y="132">pipes JSON in</text><text x="648" y="176" text-anchor="middle">runs</text><text class="t-b" x="0" y="402">RELEASE NOTES</text><g class=""><rect class="tk" x="0" y="414" width="290" height="72" rx="8"/><text class="t-b" x="12" y="438">CHANGELOG.md</text><text class="t-s" x="12" y="456">+29 −0 · the Unreleased section</text><rect class="fk" x="12" y="466" width="232" height="8" rx="2"/></g><g class=""><rect class="tk" x="335" y="414" width="290" height="72" rx="8"/><text class="t-b" x="347" y="438">alpha.1 release page</text><text class="t-s" x="347" y="456">+1 −1 · one Sources line</text><rect class="fk" x="347" y="466" width="8" height="8" rx="2"/><rect class="rm" x="358" y="466" width="8" height="8" rx="2"/></g></svg></div>
+      <figcaption id="f2-cap"><span class="fig-n">Fig. 2</span>The nine changed files by part, 88 lines added and 15 removed. Solid bar: lines added; hollow bar: lines removed; 8 px per line. The dashed box is a file that did not change. The largest change is the new test (+32), then the changelog (+29); the template changed by 9 lines.</figcaption>
+    </figure>
+  </section>
+
+  <section id="areas" aria-labelledby="h-areas">
+    <p class="eyebrow">Area by area</p>
+    <h2 id="h-areas">Each change is small and carries one number you can check</h2>
+
+    <h3 class="c-guide"><span class="term">Guidance</span>: one rule with a number, four rules in words</h3>
+    <p>The numeric rule is in <code>visual-system.md</code>: keep every concept hue 30° or more from every status hue, which are <code>--risk</code> 28, <code>--warn</code> 90 (dark 100) and <code>--ok</code> 145. What is left is 175° to 358°, plus one orange slot at about 60. That is room for five concepts: four hues 60° apart (175, 235, 295, 355) and the slot. Drag a candidate hue and see which side of the rule it lands on.</p>
+    <figure class="fig wide" aria-describedby="f3-cap">
+      <div class="controls">
+        <label class="slider c-guide">Which hue do you want for a new concept?<input id="hue" type="range" min="0" max="359" step="1" value="60" aria-describedby="hue-read"><output id="hue-out" for="hue">60°</output></label>
+      </div>
+      <div class="frame" style="--min: 720px; --min-phone: 800px"><svg viewBox="0 0 960 220" role="img" aria-label="A strip of hues from 0 to 360 degrees with the 30 degree keep-out zones faded around risk 28, warn 90 and ok 145. Only the hues from 175 to 358 stay free, plus a 3 degree slot from 58 to 60. A marker shows the hue you pick."><rect class="wd" style="--h:2.5" x="40" y="84" width="12.8" height="40"/><rect class="wd" style="--h:7.5" x="52.2" y="84" width="12.8" height="40"/><rect class="wd" style="--h:12.5" x="64.4" y="84" width="12.8" height="40"/><rect class="wd" style="--h:17.5" x="76.7" y="84" width="12.8" height="40"/><rect class="wd" style="--h:22.5" x="88.9" y="84" width="12.8" height="40"/><rect class="wd" style="--h:27.5" x="101.1" y="84" width="12.8" height="40"/><rect class="wd" style="--h:32.5" x="113.3" y="84" width="12.8" height="40"/><rect class="wd" style="--h:37.5" x="125.6" y="84" width="12.8" height="40"/><rect class="wd" style="--h:42.5" x="137.8" y="84" width="12.8" height="40"/><rect class="wd" style="--h:47.5" x="150" y="84" width="12.8" height="40"/><rect class="wd" style="--h:52.5" x="162.2" y="84" width="12.8" height="40"/><rect class="wd" style="--h:57.5" x="174.4" y="84" width="12.8" height="40"/><rect class="wd" style="--h:62.5" x="186.7" y="84" width="12.8" height="40"/><rect class="wd" style="--h:67.5" x="198.9" y="84" width="12.8" height="40"/><rect class="wd" style="--h:72.5" x="211.1" y="84" width="12.8" height="40"/><rect class="wd" style="--h:77.5" x="223.3" y="84" width="12.8" height="40"/><rect class="wd" style="--h:82.5" x="235.6" y="84" width="12.8" height="40"/><rect class="wd" style="--h:87.5" x="247.8" y="84" width="12.8" height="40"/><rect class="wd" style="--h:92.5" x="260" y="84" width="12.8" height="40"/><rect class="wd" style="--h:97.5" x="272.2" y="84" width="12.8" height="40"/><rect class="wd" style="--h:102.5" x="284.4" y="84" width="12.8" height="40"/><rect class="wd" style="--h:107.5" x="296.7" y="84" width="12.8" height="40"/><rect class="wd" style="--h:112.5" x="308.9" y="84" width="12.8" height="40"/><rect class="wd" style="--h:117.5" x="321.1" y="84" width="12.8" height="40"/><rect class="wd" style="--h:122.5" x="333.3" y="84" width="12.8" height="40"/><rect class="wd" style="--h:127.5" x="345.6" y="84" width="12.8" height="40"/><rect class="wd" style="--h:132.5" x="357.8" y="84" width="12.8" height="40"/><rect class="wd" style="--h:137.5" x="370" y="84" width="12.8" height="40"/><rect class="wd" style="--h:142.5" x="382.2" y="84" width="12.8" height="40"/><rect class="wd" style="--h:147.5" x="394.4" y="84" width="12.8" height="40"/><rect class="wd" style="--h:152.5" x="406.7" y="84" width="12.8" height="40"/><rect class="wd" style="--h:157.5" x="418.9" y="84" width="12.8" height="40"/><rect class="wd" style="--h:162.5" x="431.1" y="84" width="12.8" height="40"/><rect class="wd" style="--h:167.5" x="443.3" y="84" width="12.8" height="40"/><rect class="wd" style="--h:172.5" x="455.6" y="84" width="12.8" height="40"/><rect class="wd" style="--h:177.5" x="467.8" y="84" width="12.8" height="40"/><rect class="wd" style="--h:182.5" x="480" y="84" width="12.8" height="40"/><rect class="wd" style="--h:187.5" x="492.2" y="84" width="12.8" height="40"/><rect class="wd" style="--h:192.5" x="504.4" y="84" width="12.8" height="40"/><rect class="wd" style="--h:197.5" x="516.7" y="84" width="12.8" height="40"/><rect class="wd" style="--h:202.5" x="528.9" y="84" width="12.8" height="40"/><rect class="wd" style="--h:207.5" x="541.1" y="84" width="12.8" height="40"/><rect class="wd" style="--h:212.5" x="553.3" y="84" width="12.8" height="40"/><rect class="wd" style="--h:217.5" x="565.6" y="84" width="12.8" height="40"/><rect class="wd" style="--h:222.5" x="577.8" y="84" width="12.8" height="40"/><rect class="wd" style="--h:227.5" x="590" y="84" width="12.8" height="40"/><rect class="wd" style="--h:232.5" x="602.2" y="84" width="12.8" height="40"/><rect class="wd" style="--h:237.5" x="614.4" y="84" width="12.8" height="40"/><rect class="wd" style="--h:242.5" x="626.7" y="84" width="12.8" height="40"/><rect class="wd" style="--h:247.5" x="638.9" y="84" width="12.8" height="40"/><rect class="wd" style="--h:252.5" x="651.1" y="84" width="12.8" height="40"/><rect class="wd" style="--h:257.5" x="663.3" y="84" width="12.8" height="40"/><rect class="wd" style="--h:262.5" x="675.6" y="84" width="12.8" height="40"/><rect class="wd" style="--h:267.5" x="687.8" y="84" width="12.8" height="40"/><rect class="wd" style="--h:272.5" x="700" y="84" width="12.8" height="40"/><rect class="wd" style="--h:277.5" x="712.2" y="84" width="12.8" height="40"/><rect class="wd" style="--h:282.5" x="724.4" y="84" width="12.8" height="40"/><rect class="wd" style="--h:287.5" x="736.7" y="84" width="12.8" height="40"/><rect class="wd" style="--h:292.5" x="748.9" y="84" width="12.8" height="40"/><rect class="wd" style="--h:297.5" x="761.1" y="84" width="12.8" height="40"/><rect class="wd" style="--h:302.5" x="773.3" y="84" width="12.8" height="40"/><rect class="wd" style="--h:307.5" x="785.6" y="84" width="12.8" height="40"/><rect class="wd" style="--h:312.5" x="797.8" y="84" width="12.8" height="40"/><rect class="wd" style="--h:317.5" x="810" y="84" width="12.8" height="40"/><rect class="wd" style="--h:322.5" x="822.2" y="84" width="12.8" height="40"/><rect class="wd" style="--h:327.5" x="834.4" y="84" width="12.8" height="40"/><rect class="wd" style="--h:332.5" x="846.7" y="84" width="12.8" height="40"/><rect class="wd" style="--h:337.5" x="858.9" y="84" width="12.8" height="40"/><rect class="wd" style="--h:342.5" x="871.1" y="84" width="12.8" height="40"/><rect class="wd" style="--h:347.5" x="883.3" y="84" width="12.8" height="40"/><rect class="wd" style="--h:352.5" x="895.6" y="84" width="12.8" height="40"/><rect class="wd" style="--h:357.5" x="907.8" y="84" width="12.8" height="40"/><rect x="40" y="84" width="141.8" height="40" fill="var(--surface)" opacity=".74"/><rect x="186.7" y="84" width="281.1" height="40" fill="var(--surface)" opacity=".74"/><rect x="915.1" y="84" width="4.9" height="40" fill="var(--surface)" opacity=".74"/><g style="--k: var(--risk)"><rect x="35.1" y="52" width="146.7" height="22" rx="4" fill="none" stroke="var(--k)" stroke-width="1.5" stroke-dasharray="5 4"/><text class="t-b" style="fill: var(--k)" x="43.1" y="68">risk 28° ✗</text><line x1="108.4" y1="74" x2="108.4" y2="128" stroke="var(--k)" stroke-width="2.5"/></g><g style="--k: var(--warn)"><rect x="186.7" y="26" width="146.7" height="22" rx="4" fill="none" stroke="var(--k)" stroke-width="1.5" stroke-dasharray="5 4"/><text class="t-b" style="fill: var(--k)" x="194.7" y="42">warn 90° ↯</text><line x1="260" y1="48" x2="260" y2="128" stroke="var(--k)" stroke-width="2.5"/></g><g style="--k: var(--ok)"><rect x="321.1" y="52" width="146.7" height="22" rx="4" fill="none" stroke="var(--k)" stroke-width="1.5" stroke-dasharray="5 4"/><text class="t-b" style="fill: var(--k)" x="329.1" y="68">ok 145° ✓</text><line x1="394.4" y1="74" x2="394.4" y2="128" stroke="var(--k)" stroke-width="2.5"/></g><path class="ax" d="M40,128 H920"/><text class="t-s t-num" x="40" y="148" text-anchor="middle">0</text><text class="t-s t-num" x="186.7" y="148" text-anchor="middle">60</text><text class="t-s t-num" x="333.3" y="148" text-anchor="middle">120</text><text class="t-s t-num" x="480" y="148" text-anchor="middle">180</text><text class="t-s t-num" x="626.7" y="148" text-anchor="middle">240</text><text class="t-s t-num" x="773.3" y="148" text-anchor="middle">300</text><text class="t-s t-num" x="920" y="148" text-anchor="middle">360</text><g id="cand"><line id="c-line" x1="186.7" y1="24" x2="186.7" y2="140" stroke="var(--ink)" stroke-width="3"/><circle id="c-dot" cx="186.7" cy="104" r="10" fill="var(--ink)" stroke="var(--surface)" stroke-width="3"/><text id="c-tx" class="t-b t-num" style="fill: var(--ink)" x="186.7" y="16" text-anchor="middle">60°</text></g><path d="M184.2,156 V168" fill="none" stroke="var(--ink-2)" stroke-width="2"/><text x="176.2" y="190">one 3° slot, 58° to 60°</text><g class="dim" style="--k: var(--ink-2)"><line x1="467.8" y1="178" x2="915.1" y2="178"/><line x1="467.8" y1="172" x2="467.8" y2="184"/><line x1="915.1" y1="172" x2="915.1" y2="184"/></g><text class="t-b" x="691.4" y="206" text-anchor="middle">free: 175° to 358° (183° wide)</text></svg></div>
+      <p class="readout" id="hue-read" aria-live="polite">Hue <b class="term c-guide" id="h-val">60°</b> is <b id="h-d">30°</b> from the nearest status hue, <b id="h-n">warn (90°)</b>: <b id="h-v" class="v-ok">allowed ✓</b></p>
+      <p class="try"><b>Try</b>drag from 50 to 70. <b>Notice</b>only 58, 59 and 60 pass between risk and warn; every other hue up to 175 is too close.</p>
+      <figcaption id="f3-cap"><span class="fig-n">Fig. 3</span>Hues 0 to 360 with the 30° keep-out zones faded. Between risk (28) and warn (90) the zones leave 2°, which is the three whole hues 58 to 60. Light-mode values: in dark mode warn sits at 100, and a concept moves to 70 with it, as the template's busy does.</figcaption>
+    </figure>
+    <dl class="rules">
+      <div><dt>visual-system.md</dt><dd>Status in a figure carries a mark or a word (✓ ✗ ↯, “risk”), never colour alone. Every status in this page’s figures does.</dd></div>
+      <div><dt>visual-system.md</dt><dd>A grid item of your own that holds code needs <code>min-width: 0</code>, or it grows to the code’s width and the phone scrolls sideways.</dd></div>
+      <div><dt>SKILL.md</dt><dd>A page with no quantity to drag drops <code>model()</code>. A stepper or a toggle is its interactive figure.</dd></div>
+      <div><dt>explainer-craft.md</dt><dd>A PR or release explainer keeps its repo’s order: background, change diagram, walkthrough, quiz. The predict box goes in the quiz; the recap box is optional. This page follows it.</dd></div>
+    </dl>
+
+    <h3 class="c-kit"><span class="term">Kit</span>: two hues moved and a hidden toggle side leaves the accessibility tree</h3>
+    <p>The hue move is two lines in <code>template.html</code>. Light-mode warn goes from 80 to 90, dark from 85 to 100. Ok goes from 150 to 145 in both. As a consequence, not as a stated reason, serve went from 28° to 33° away from ok.</p>
+<pre class="cmd"><code><span class="del">-  --ok:   light-dark(oklch(52% 0.13 150), oklch(76% 0.13 150));</span>
+<span class="del">-  --warn: light-dark(oklch(60% 0.14 80),  oklch(82% 0.13 85));</span>
+<span class="add">+  --ok:   light-dark(oklch(52% 0.13 145), oklch(76% 0.13 145));</span>
+<span class="add">+  --warn: light-dark(oklch(60% 0.14 90),  oklch(82% 0.13 100));</span></code></pre>
+    <p>The second kit change is one CSS declaration. A before/after toggle fades the state it hides with <code>opacity</code>. An opacity of 0 removes the pixels but leaves the group in the accessibility tree, so both states stayed in the tree. The hidden state now also turns <code>visibility: hidden</code> once the fade ends. alpha.1’s own release page had patched this in its page CSS; the kit now does it for every page.</p>
+    <figure class="fig wide stepper" aria-describedby="f4-cap">
+      <div class="frame" style="--min: 720px; --min-phone: 800px"><svg viewBox="0 0 960 340" role="img" aria-label="Timeline of one toggle press. Opacity of the old state eases from 1 to 0 over 0.45 seconds while visibility stays visible; at 0.45 seconds visibility flips to hidden. In alpha.1 the old state stays in the accessibility tree; in alpha.2 it leaves the tree.">
+  <g data-s="1"><text class="t-b" x="70" y="16">you press “After” at 0 s</text>
+    <text class="t-b" x="70" y="52">opacity</text><text class="t-s t-num" x="58" y="82" text-anchor="end">1</text><text class="t-s t-num" x="58" y="174" text-anchor="end">0</text>
+    <path class="ax" d="M70,76 V170 H500"/>
+    <text class="t-b" x="70" y="214">visibility</text>
+    <text class="t-s t-num" x="70" y="286" text-anchor="middle">0 s</text><text class="t-s t-num" x="430" y="286" text-anchor="middle">0.45 s</text>
+    <text class="t-s" x="285" y="308" text-anchor="middle">seconds after the press</text></g>
+  <g class="c-kit"><path class="ln sk draw" d="M70,76 C142,160 142,170 430,170 H500" pathLength="1" data-s="2"/>
+    <text class="t-b k" x="230" y="112" data-s="2">opacity eases from 1 to 0</text>
+    <g data-s="2"><rect class="tk" x="70" y="226" width="360" height="34" rx="6"/><text class="t-b" x="84" y="248">visible for the whole fade</text></g></g>
+  <g data-s="3"><rect class="ho" x="430" y="226" width="70" height="34" rx="6"/><text class="t-s" x="465" y="248" text-anchor="middle">hidden</text>
+    <line class="guide c-kit" x1="430" y1="30" x2="430" y2="268"/>
+    <text class="t-b k c-kit" x="430" y="30" text-anchor="middle" dy="-4">visibility flips</text>
+    <text class="t-s" x="500" y="330" text-anchor="end">out of the accessibility tree ✓</text></g>
+  <rect class="sunk" x="560" y="34" width="400" height="124" rx="8"/>
+  <text class="t-b" x="576" y="62" data-s="1">alpha.1 kit</text>
+  <text x="576" y="96" data-s="1">after group (30°)</text><text class="t-b" x="944" y="96" text-anchor="end" style="fill: var(--ok)" data-s="1">listed ✓</text>
+  <text x="576" y="134" data-s="1">before group (20°)</text>
+  <text class="t-b" x="944" y="134" text-anchor="end" data-s="1-2">in the tree</text>
+  <text class="t-b" x="944" y="134" text-anchor="end" style="fill: var(--risk)" data-s="3">still listed ✗</text>
+  <g class="c-kit"><rect class="tk" x="560" y="186" width="400" height="124" rx="8" />
+  <text class="t-b k" x="576" y="214" data-s="1">alpha.2 kit</text></g>
+  <text x="576" y="248" data-s="1">after group (30°)</text><text class="t-b" x="944" y="248" text-anchor="end" style="fill: var(--ok)" data-s="1">listed ✓</text>
+  <text x="576" y="286" data-s="1-2">before group (20°)</text><text class="t-b" x="944" y="286" text-anchor="end" data-s="1-2">in the tree</text>
+  <text x="576" y="286" style="fill: var(--ink-3)" data-s="3">before group (20°)</text><text class="t-b" x="944" y="286" text-anchor="end" style="fill: var(--ok)" data-s="3">removed ✓</text>
+</svg></div>
+      <ol class="step-caps">
+        <li><span>You press “After” in a before/after figure. The old state is about to fade. For now both states are in the page, and both are in the accessibility tree.</span></li>
+        <li><span>For 0.45 s the old state’s opacity eases from 1 to 0. Its visibility stays visible the whole time, so the fade can be seen. At opacity 0 it is invisible but still in the tree.</span></li>
+        <li><span>At 0.45 s visibility flips to hidden. alpha.1 had no such rule, so its old state stayed in the tree. alpha.2 takes it out: one state is left.</span></li>
+      </ol>
+      <figcaption id="f4-cap"><span class="fig-n">Fig. 4</span>One toggle press on a timeline. The transition on <code>visibility</code> is 0.45 s, the same as the fade, so the node leaves the tree when the fade ends. The opacity curve is the kit’s easing, <code>cubic-bezier(.2, .7, .2, 1)</code>. The two groups shown are the wheel’s (Fig. 1).</figcaption>
+    </figure>
+
+    <h3 class="c-check"><span class="term">Check</span>: a demo word inside inline code no longer fails the page</h3>
+    <p>check.py fails any page that still holds the template’s demo words. That also failed a page that only <em>names</em> them, such as a page about eli15 itself. The scan now deletes bare <code>&lt;code&gt;…&lt;/code&gt;</code> spans before it looks. The change is +2 −1 in check.py.</p>
+    <dl class="terms wide cases" aria-label="Three cases for the demo-text scan">
+      <div style="--k: var(--ok)"><dt>✓ passes</dt><dd>The word inside a bare <code>&lt;code&gt;café&lt;/code&gt;</code> span.</dd></div>
+      <div style="--k: var(--risk)"><dt>✗ FAIL</dt><dd>The word in a sentence. The message: “template demo text left in the page”.</dd></div>
+      <div style="--k: var(--risk)"><dt>✗ FAIL</dt><dd>The word inside <code>&lt;code class="x"&gt;café&lt;/code&gt;</code>. Only a bare tag is skipped.</dd></div>
+    </dl>
+
+    <h3 class="c-gate"><span class="term">Gate</span>: one test runs the whole chain for real</h3>
+    <p>alpha.1 shipped 9 gate tests and none ran the real check.py: seven replaced it with a fake and two never reach it. Nothing proved that gate.py, check.py and Chrome work together. The tenth test does. It sends the JSON that Claude Code would send, in order, to the real <code>gate.py</code>. Step through it.</p>
+    <figure class="fig wide stepper" aria-describedby="f5-cap">
+      <div class="frame" style="--min: 720px; --min-phone: 800px"><svg viewBox="0 0 960 640" role="img" aria-label="Sequence of the end-to-end gate test in six steps. The test writes a raw copy of the template and a clean copy with the demo words swapped. It sends two PostToolUse events and one Stop event to gate.py. gate.py runs check.py on each page, and check.py drives headless Chrome. The raw page fails with demo text and the clean page passes. gate.py answers with one reply: block for the raw page, passed for the clean page.">
+  <defs><marker id="ah5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--ink-3)"/></marker>
+    <path id="m2" d="M114,190 H346"/><path id="m3" d="M114,250 H346"/><path id="m4" d="M354,310 H586"/><path id="m5" d="M594,370 H826"/></defs>
+  <line class="gr" x1="110" y1="62" x2="110" y2="545"/><line class="gr" x1="350" y1="62" x2="350" y2="545"/><line class="gr" x1="590" y1="62" x2="590" y2="545"/><line class="gr" x1="830" y1="62" x2="830" y2="545"/>
+  <g class="c-gate"><rect class="tk" x="20" y="8" width="180" height="54" rx="8"/><text class="t-b" x="110" y="31" text-anchor="middle">test_gate.py</text><text class="t-s" x="110" y="50" text-anchor="middle">pytest</text></g><g class="c-gate"><rect class="tk" x="260" y="8" width="180" height="54" rx="8"/><text class="t-b" x="350" y="31" text-anchor="middle">gate.py</text><text class="t-s" x="350" y="50" text-anchor="middle">the hook script</text></g><g class="c-check"><rect class="tk" x="500" y="8" width="180" height="54" rx="8"/><text class="t-b" x="590" y="31" text-anchor="middle">check.py</text><text class="t-s" x="590" y="50" text-anchor="middle">run by uv</text></g><g class="c-check"><rect class="tk" x="740" y="8" width="180" height="54" rx="8"/><text class="t-b" x="830" y="31" text-anchor="middle">Chrome</text><text class="t-s" x="830" y="50" text-anchor="middle">headless</text></g>
+  <g data-s="1"><path d="M114,100 H166 V128 H114" fill="none" stroke="var(--ink-3)" stroke-width="2" marker-end="url(#ah5)"/>
+    <text x="180" y="110">writes raw.html</text><text x="180" y="128">and clean.html</text></g>
+  <g data-s="2"><path d="M114,190 H346" fill="none" stroke="var(--ink-3)" stroke-width="2" marker-end="url(#ah5)"/><text class="t-b" x="230.0" y="182" text-anchor="middle">PostToolUse JSON ×2</text><text class="t-s" x="230.0" y="208" text-anchor="middle">one per page</text>
+    <text class="t-s" x="362" y="184">adds both to its list</text></g>
+  <g data-s="3"><path d="M114,250 H346" fill="none" stroke="var(--ink-3)" stroke-width="2" marker-end="url(#ah5)"/><text class="t-b" x="230.0" y="242" text-anchor="middle">Stop JSON</text><text class="t-s" x="362" y="244">wakes up, reads the list</text></g>
+  <g data-s="4"><path d="M354,310 H586" fill="none" stroke="var(--ink-3)" stroke-width="2" marker-end="url(#ah5)"/><text class="t-b" x="470.0" y="302" text-anchor="middle">uv run check.py</text><text class="t-s" x="470.0" y="328" text-anchor="middle">once per page</text>
+    <path d="M594,370 H826" fill="none" stroke="var(--ink-3)" stroke-width="2" marker-end="url(#ah5)"/><text class="t-b" x="710.0" y="362" text-anchor="middle">drives the page</text>
+    <path d="M826,420 H594" fill="none" stroke="var(--ink-3)" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#ah5)"/><text class="t-s" x="710.0" y="412" text-anchor="middle">audit result</text></g>
+  <g data-s="5"><path d="M586,470 H354" fill="none" stroke="var(--ink-3)" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#ah5)"/><text class="t-b" x="470.0" y="462" text-anchor="middle">raw: FAIL · clean: PASS</text></g>
+  <g data-s="6"><path d="M346,520 H114" fill="none" stroke="var(--ink-3)" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#ah5)"/><text class="t-b" x="230.0" y="512" text-anchor="middle">one JSON reply</text>
+    <g style="--k: var(--risk)"><rect class="tk" x="0" y="558" width="470" height="74" rx="8"/><text class="t-b" x="14" y="582">raw.html ✗ blocked</text>
+      <text class="t-s" x="14" y="604">decision: block; the reason names raw.html</text><text class="t-s" x="14" y="622">and “demo text”</text></g>
+    <g style="--k: var(--ok)"><rect class="tk" x="490" y="558" width="470" height="74" rx="8"/><text class="t-b" x="504" y="582">clean.html ✓ passed</text>
+      <text class="t-s" x="504" y="604">systemMessage: “eli15 check passed: clean.html”</text></g></g>
+  <g class="c-gate"><circle class="tok fk" r="6" data-tok="2"><animateMotion dur="1.1s" begin="indefinite" fill="freeze"><mpath href="#m2"/></animateMotion></circle>
+    <circle class="tok fk" r="6" data-tok="3"><animateMotion dur="1.1s" begin="indefinite" fill="freeze"><mpath href="#m3"/></animateMotion></circle></g>
+  <g class="c-check"><circle class="tok fk" r="6" data-tok="4"><animateMotion dur="1.1s" begin="indefinite" fill="freeze"><mpath href="#m4"/></animateMotion></circle>
+    <circle class="tok fk" r="6" data-tok="4"><animateMotion dur="1.1s" begin="indefinite" fill="freeze"><mpath href="#m5"/></animateMotion></circle></g>
+</svg></div>
+      <ol class="step-caps">
+        <li><span>The test writes two pages into a temporary folder. <code>raw.html</code> is a plain copy of <code>template.html</code>. <code>clean.html</code> is the same copy with <code>barista</code> swapped for <code>server</code> and <code>café</code> for <code>shop</code>.</span></li>
+        <li><span>For each page the test sends gate.py a PostToolUse event, the one Claude Code sends after a Write. gate.py adds both pages to its pending list. It would skip the template’s own path, which is why the test works on copies.</span></li>
+        <li><span>The test sends one Stop event. gate.py wakes up and reads the list.</span></li>
+        <li><span>gate.py runs <code>uv run check.py</code> on each page. check.py drives headless Chrome through the real audit.</span></li>
+        <li><span>The verdicts come back: the raw page fails on “demo text”, the clean page passes.</span></li>
+        <li><span>gate.py answers with one JSON reply. The test asserts three things: <code>decision</code> is <code>block</code>; the reason names raw.html and “demo text”; the message says “eli15 check passed: clean.html”.</span></li>
+      </ol>
+      <figcaption id="f5-cap"><span class="fig-n">Fig. 5</span>The new test, <code>test_real_check_blocks_the_template_and_passes_a_clean_copy</code>. Solid arrows are the test’s calls; dashed arrows are replies. The earlier 9 tests still use fakes.</figcaption>
+    </figure>
+    <div class="note key c-gate">
+      <span class="tag">Key idea</span>
+      <p>The test checks the gate in both directions: a page that must be stopped is stopped, and a page that must pass passes. A gate that blocked everything would fail the second half; a gate that blocked nothing would fail the first.</p>
+    </div>
+    <p>On this Mac the template check took about 6 s and the whole pytest run about 12 s. The test skips when <code>uv</code> is missing, and also when the gate reports that it could not run the check, for example without Chrome. A skip is not a pass.</p>
+
+    <h3>Release page</h3>
+    <p>One line changed on the alpha.1 release page: removed an internal project name from the alpha.1 page.</p>
+
+    <h3>What this release does not do</h3>
+    <ul class="limits">
+      <li><span><b>No script enforces the hue rule.</b> check.py has no rule for hue distance. The 30° rule is guidance Claude must follow, which is why the slider in Fig. 3 exists.</span></li>
+      <li><span><b>The toggle fix is not tested with a screen reader.</b> It rests on how <code>visibility</code> works in CSS and on the kit’s own comment.</span></li>
+      <li><span><b>The new test needs Chrome and real time.</b> On a machine without them it skips, so a green run there proves less.</span></li>
+    </ul>
+  </section>
+
+  <section id="quiz" aria-labelledby="h-quiz">
+    <p class="eyebrow">Check what you took from this page</p>
+    <h2 id="h-quiz">You can now say how much room the hue rule leaves</h2>
+    <div class="predict">
+      <p class="q"><span class="tag">Guess first</span>In light mode, risk is at hue 28 and warn at hue 90, 62° apart. A new concept hue must be 30° or more from both. How many whole-degree hues fit between them?</p>
+      <div class="choices" role="group" aria-label="Your guess"><button type="button" class="btn">about 30</button><button type="button" class="btn">about 12</button><button type="button" class="btn" data-right>3</button></div>
+      <details><summary>Show the answer</summary><p><b>Three: 58, 59 and 60.</b> From risk, the hue must be 28 + 30 = 58 or more. From warn, it must be 90 − 30 = 60 or less. Each status colour takes 30° out of the 62° gap, which leaves 2°. Most people guess a wide gap because 62° looks wide. Drag the marker in Fig. 3 from 55 to 65. In dark mode warn sits at 100, so the slot widens to 58 to 70.</p></details>
+    </div>
+    <details>
+      <summary>A page names the template’s demo word in a sentence and again in a bare code span. What does check.py do?</summary>
+      <p>It fails the page. The scan deletes the code span first, so the code span is fine, but the sentence still holds the word.</p>
+    </details>
+    <details>
+      <summary>The new gate test runs on a machine with no Chrome. Does it fail?</summary>
+      <p>No, it skips. The gate reports that the check could not run, and the test turns that report into a skip. With no <code>uv</code> it skips before anything runs.</p>
+    </details>
+    <details>
+      <summary>Which lines of gate.py changed in this release?</summary>
+      <p>None. The diff shows 0 lines for gate.py. The new test exercises the code that shipped in alpha.1.</p>
+    </details>
+  </section>
+
+  <section class="sources" aria-label="Sources">
+    <p class="eyebrow">Sources</p>
+    <ul>
+      <li>Diff: <code>git diff 8260780 83dde17</code> in claude-eli15-plugin: 9 files, 88 insertions, 15 deletions. Per-file counts are its <code>--numstat</code>; line totals are <code>wc -l</code> at 83dde17.</li>
+      <li>Hue values: the <code>--ok</code>, <code>--warn</code>, <code>--risk</code> and concept lines of <code>template.html</code> before and after. Distances in Fig. 1 and Fig. 3 are computed from them as the shorter way round the 360° wheel; Fig. 3 is drawn from the same numbers by <code>model()</code> in this page’s source.</li>
+      <li>The rules and the toggle behaviour: <code>plugins/eli15/CHANGELOG.md</code> (Unreleased) and the four reference files at 83dde17. The test: <code>hooks/scripts/test_gate.py</code> and <code>gate.py</code>.</li>
+      <li>Timings (6 s, 12 s) were measured on this Mac by the release session and not re-measured for this page. No screen reader was run.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+/* ── ELI15 RUNTIME: keep as is. Page-specific code goes in the next script. ── */
+(() => {
+  const root = document.documentElement, qs = new URLSearchParams(location.search);
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  const store = {
+    get: k => { try { return localStorage.getItem(k); } catch { return null; } },
+    set: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
+  };
+  const E = (window.ELI15 = { steppers: [] });
+  E.still = () => reduce.matches || root.classList.contains('motion-off');
+
+  // theme: ?theme=dark|light, then the saved choice, then the OS setting
+  const theme = qs.get('theme') || store.get('eli15-theme');
+  if (theme === 'dark' || theme === 'light') root.dataset.theme = theme;
+  for (const b of document.querySelectorAll('[data-action="theme"]')) b.addEventListener('click', () => {
+    const now = root.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    root.dataset.theme = now === 'dark' ? 'light' : 'dark';
+    store.set('eli15-theme', root.dataset.theme);
+  });
+
+  // ambient motion runs only while on screen, the tab is visible, and motion is allowed
+  const ambient = [];
+  const sync = () => {
+    for (const a of ambient) {
+      const run = a.seen && !E.still() && !document.hidden;
+      if (run !== a.running) { a.running = run; run ? a.start() : a.stop(); }
+    }
+    for (const s of document.querySelectorAll('svg')) E.still() ? s.pauseAnimations() : s.unpauseAnimations();
+  };
+  const seen = new IntersectionObserver(es => {
+    for (const e of es) for (const a of ambient) if (a.el === e.target) a.seen = e.isIntersecting;
+    sync();
+  });
+  E.ambient = (el, start, stop) => { ambient.push({ el, start, stop, seen: false, running: false }); seen.observe(el); };
+  const motionBtn = document.querySelector('[data-action="motion"]');
+  const setMotion = off => {
+    root.classList.toggle('motion-off', off);
+    if (motionBtn) { motionBtn.setAttribute('aria-pressed', off); motionBtn.textContent = off ? 'Play motion' : 'Pause motion'; }
+    sync();
+  };
+  motionBtn?.addEventListener('click', () => {
+    const off = !root.classList.contains('motion-off');
+    store.set('eli15-motion', off ? 'off' : 'on'); setMotion(off);
+  });
+  if (qs.get('motion') === 'off' || store.get('eli15-motion') === 'off') setMotion(true);
+  reduce.addEventListener('change', sync);
+  document.addEventListener('visibilitychange', sync);
+
+  // tokens: a dot rides a path once when its step is entered going forward
+  const runToken = t => {
+    const anims = t.querySelectorAll('animateMotion');
+    if (!anims.length) return;
+    t.classList.add('run');
+    for (const a of anims) a.beginElement();
+    clearTimeout(t._done);
+    t._done = setTimeout(() => t.classList.remove('run'), (parseFloat(anims[0].getAttribute('dur')) || 1.1) * 1000 + 200);
+  };
+
+  // steppers: data-s="3" shows from step 3 on, data-s="2-3" only on steps 2 to 3.
+  // They open on the last step, so the default picture is the complete one.
+  const inStep = (spec, k) => { const [a, b = Infinity] = spec.split('-').map(Number); return k >= a && k <= b; };
+  for (const fig of document.querySelectorAll('figure.stepper')) {
+    const parts = [...fig.querySelectorAll('[data-s]')];
+    const capList = fig.querySelector('.step-caps');
+    const caps = capList ? [...capList.children] : [];
+    const n = caps.length;
+    if (!n) continue;
+    const player = document.createElement('div');
+    player.className = 'player';
+    player.innerHTML = `<button type="button" class="btn icon" aria-label="Previous step">‹</button><button type="button" class="btn">Play</button><input type="range" min="1" max="${n}" step="1" aria-label="Step"><button type="button" class="btn icon" aria-label="Next step">›</button><span class="count" aria-hidden="true"></span><span class="sr" aria-live="polite"></span>`;
+    capList.before(player);
+    const [prev, play, range, next, count, live] = player.children;
+    let k = n, timer = 0, build = 0;
+    const show = (to, animate = true, announce = animate) => {
+      const from = k;
+      k = Math.max(1, Math.min(n, to));
+      fig.classList.toggle('no-anim', !animate || E.still());
+      for (const p of parts) p.classList.toggle('on', inStep(p.dataset.s, k));
+      caps.forEach((c, j) => { c.classList.toggle('now', j === k - 1); c.classList.toggle('past', j < k - 1); });
+      range.value = k;
+      count.textContent = `${k} / ${n}`;
+      prev.setAttribute('aria-disabled', k === 1);
+      next.setAttribute('aria-disabled', k === n);
+      if (announce) live.textContent = `Step ${k} of ${n}. ${caps[k - 1].textContent}`;
+      if (animate && !E.still() && k === from + 1) for (const t of fig.querySelectorAll(`[data-tok="${k}"]`)) runToken(t);
+    };
+    const stop = () => { clearInterval(timer); clearInterval(build); timer = build = 0; play.textContent = 'Play'; };
+    play.addEventListener('click', () => {
+      if (timer) return stop();
+      if (k === n) show(1);
+      play.textContent = 'Pause';
+      timer = setInterval(() => { show(k + 1); if (k === n) stop(); }, +fig.dataset.interval || 2600);
+    });
+    prev.addEventListener('click', () => { stop(); show(k - 1); });
+    next.addEventListener('click', () => { stop(); show(k + 1); });
+    range.addEventListener('input', () => { stop(); show(+range.value); });
+    caps.forEach((c, j) => c.addEventListener('click', () => { stop(); show(j + 1); }));
+    fig.tabIndex = 0;
+    fig.addEventListener('keydown', e => {
+      if (e.target.matches('input, button')) return;
+      if (e.key === 'ArrowRight') { stop(); show(k + 1); }
+      if (e.key === 'ArrowLeft') { stop(); show(k - 1); }
+    });
+    // entrance: with motion allowed the figure waits on step 1 and builds itself once,
+    // quickly, the first time it scrolls into view; otherwise it shows the last step
+    const primed = !E.still() && !qs.has('step');
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return;
+      io.disconnect();
+      if (!primed || timer || k !== 1) return;
+      if (E.still()) return show(n, false, false);
+      build = setInterval(() => { show(k + 1, true, false); if (k === n) { clearInterval(build); build = 0; } }, 520);
+    }, { threshold: 0.35 });
+    io.observe(fig);
+    E.steppers.push({ fig, show, n, stop });
+    show(qs.has('step') ? +qs.get('step') : primed ? 1 : n, false, false);
+  }
+
+  // before / after toggles: buttons set data-state on the figure; CSS shows .only-before / .only-after
+  for (const g of document.querySelectorAll('[data-toggle]')) {
+    const fig = g.closest('figure'), btns = [...g.querySelectorAll('button[data-state]')];
+    const set = st => { fig.dataset.state = st; for (const b of btns) b.setAttribute('aria-pressed', b.dataset.state === st); };
+    for (const b of btns) b.addEventListener('click', () => set(b.dataset.state));
+    if (qs.has('state')) set(qs.get('state'));
+  }
+
+  // predict, then reveal: picking a choice marks it and opens the answer
+  for (const p of document.querySelectorAll('.predict')) {
+    const btns = [...p.querySelectorAll('.choices button')], ans = p.querySelector('details');
+    for (const b of btns) b.addEventListener('click', () => {
+      for (const x of btns) { x.classList.toggle('picked', x === b); x.classList.toggle('right', x.hasAttribute('data-right')); x.setAttribute('aria-pressed', x === b); }
+      p.classList.add('answered');
+      if (ans) ans.open = true;
+    });
+  }
+
+  // linked highlighting: hovering or focusing a .ref term lights the figure parts with the same data-ref
+  for (const el of document.querySelectorAll('.ref[data-ref]')) {
+    const mark = on => { for (const x of document.querySelectorAll(`[data-ref="${el.dataset.ref}"]`)) x.classList.toggle('hl', on); };
+    for (const [ev, on] of [['mouseenter', true], ['mouseleave', false], ['focus', true], ['blur', false]]) el.addEventListener(ev, () => mark(on));
+  }
+
+  // .grow: bars start at their reference size and grow once, the first time they are seen
+  const grow = new IntersectionObserver(es => {
+    for (const e of es) if (e.isIntersecting) { e.target.classList.add('seen'); grow.unobserve(e.target); }
+  }, { threshold: 0.5 });
+  for (const el of document.querySelectorAll('.grow')) E.still() ? el.classList.add('seen') : grow.observe(el);
+
+  // print: every stepper on its last step, every details open
+  addEventListener('beforeprint', () => {
+    for (const el of document.querySelectorAll('.grow')) el.classList.add('seen');
+    for (const s of E.steppers) { s.stop(); s.show(s.n, false, false); }
+    for (const d of document.querySelectorAll('details')) d.open = true;
+  });
+  root.classList.add('js');
+})();
+</script>
+<script>
+/* ── PAGE: the live model for Fig. 3. Replace for every topic. ── */
+(() => {
+  const input = document.getElementById('hue');
+  if (!input) return;
+  const $ = id => document.getElementById(id);
+  const X = h => 40 + h * 880 / 360;
+  const STATUS = [['risk', 28], ['warn', 90], ['ok', 145]];
+  const MARK = { risk: '✗', warn: '↯', ok: '✓' };
+  // shortest way round the 360-degree wheel, to the nearest status hue; 30 degrees or more passes
+  const model = h => {
+    const near = STATUS.map(([name, at]) => { const d = Math.abs(h - at) % 360; return { name, at, d: Math.min(d, 360 - d) }; })
+      .reduce((a, b) => (b.d < a.d ? b : a));
+    return { ...near, pass: near.d >= 30 };
+  };
+  const render = () => {
+    const h = +input.value, m = model(h), x = X(h);
+    $('c-line').setAttribute('x1', x); $('c-line').setAttribute('x2', x);
+    $('c-dot').setAttribute('cx', x);
+    $('c-tx').setAttribute('x', x); $('c-tx').textContent = `${h}°`;
+    $('hue-out').textContent = `${h}°`;
+    $('h-val').textContent = `${h}°`;
+    $('h-d').textContent = `${m.d}°`;
+    $('h-n').textContent = `${m.name} (${m.at}°)`;
+    $('h-v').textContent = m.pass ? 'allowed ✓' : `too close ✗ (needs 30° or more)`;
+    $('h-v').className = m.pass ? 'v-ok' : 'v-bad';
+  };
+  input.addEventListener('input', render);
+  render();
+})();
+</script>
+</body>
+</html>
