@@ -178,7 +178,8 @@ def static_checks(src: str, allow_demo: bool) -> tuple[list[str], list[str], dic
     for marker in ("ELI15 KIT", "ELI15 RUNTIME"):
         if marker not in src:
             fails.append(f"kit marker '{marker}' missing: copy the template's style and runtime blocks whole")
-    demo = None if allow_demo else DEMO.search(src)
+    # inline <code> may name the demo, so a page about eli15 itself can say `café`
+    demo = None if allow_demo else DEMO.search(re.sub(r"<code>.*?</code>", "", src, flags=re.S))
     if demo:
         fails.append(f"template demo text left in the page ('{demo.group(0)}'): replace every demo figure")
     if re.search(r"\$\$|\\frac|\\\(", src):

@@ -38,8 +38,8 @@ figure[data-state="before"] .row-s { transform: translateX(-40px); }
   --line:    light-dark(oklch(89% 0.010 85),   oklch(32% 0.014 260));
   --line-2:  light-dark(oklch(78% 0.012 85),   oklch(46% 0.014 260));
   /* status: only for right / caution / wrong, never for a concept */
-  --ok:   light-dark(oklch(52% 0.13 150), oklch(76% 0.13 150));
-  --warn: light-dark(oklch(60% 0.14 80),  oklch(82% 0.13 85));
+  --ok:   light-dark(oklch(52% 0.13 145), oklch(76% 0.13 145));
+  --warn: light-dark(oklch(60% 0.14 90),  oklch(82% 0.13 100));
   --risk: light-dark(oklch(54% 0.20 28),  oklch(72% 0.16 28));
   --k: var(--ink-2);
   --font-display: "Fraunces", Georgia, "Times New Roman", serif;
@@ -144,8 +144,9 @@ svg [data-ref] { transition: opacity .25s; }
 html:not(.js) .stepper [data-s*="-"] { display: none; }
 
 /* before / after: the markup's data-state is what no-JS and print show */
-.only-before, .only-after { transition: opacity .45s var(--ease), transform .55s var(--ease); transform-box: fill-box; }
-figure[data-state="before"] .only-after, figure[data-state="after"] .only-before { opacity: 0; }
+.only-before, .only-after { transition: opacity .45s var(--ease), transform .55s var(--ease), visibility .45s; transform-box: fill-box; }
+/* visibility takes the hidden state out of the accessibility tree; its transition lets the fade finish first */
+figure[data-state="before"] .only-after, figure[data-state="after"] .only-before { opacity: 0; visibility: hidden; }
 .tok { opacity: 0; transition: opacity .2s; }
 .tok.run { opacity: 1; }
 .step-caps { list-style: none; counter-reset: s; padding: 0; margin: 1.1rem 0 0; display: grid; gap: .45rem; max-width: var(--text); }
