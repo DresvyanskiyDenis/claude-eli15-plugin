@@ -437,7 +437,7 @@ math { font-size: 1.2em; }
     <p class="eyebrow">Sources</p>
     <ul>
       <li>Line counts: <code>wc -l</code> on the working tree of claude-eli15-plugin (README.md, CHANGELOG.md, SKILL.md, the three references, template.html, check.py, gate.py, test_gate.py, hooks.json, plugin.json, marketplace.json). The old sizes (108, 107, 223) come from the three files in <code>~/claude-config/skills/eli15</code>.</li>
-      <li>Fig. 1 counts: <code>check.py --no-render</code> on llm-wiki-eli15.html (ldc_sdm_llm_wiki, docs/presentation/llm-wiki) and, with <code>--allow-demo</code>, on assets/template.html. Prose and label word counts: a regex over the same file.</li>
+      <li>Fig. 1 counts: <code>check.py --no-render</code> on llm-wiki-eli15.html, the old skill's page on Karpathy's public LLM-wiki pattern (assets/reference-rejected.png), and, with <code>--allow-demo</code>, on assets/template.html. Prose and label word counts: a regex over the same file.</li>
       <li>Check rules: 15 <code>fails.append</code> and 11 <code>warns.append</code> call sites in <code>static_checks()</code> of check.py; audit widths and the 1000 px first-figure rule are read from the same file.</li>
       <li>Gate numbers: hooks.json (timeouts 10 s, 300 s, 300 s) and gate.py (<code>MAX_BLOCKS</code> 3, <code>MAX_LINES</code> 20, <code>CHECK_TIMEOUT</code> 240). The 9 tests in test_gate.py passed once on this Mac.</li>
       <li>Install steps, the two-copies behaviour (corrected by the lead) and update commands: README.md and the release brief. They were not run. The <code>skillOverrides</code> key was read from <code>~/.claude/settings.json</code>.</li>
