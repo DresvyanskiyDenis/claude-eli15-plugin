@@ -40,7 +40,9 @@ desktop: a viewBox about as wide as the figure's on-screen width (≈ 960 for `.
 in dark.
 
 **Concepts** are defined per page in the `PAGE CONCEPTS and page CSS` block, the first
-block of the style; any CSS rule of your own goes there too, never inside the kit:
+block of the style. Any CSS rule of your own goes there too, never inside the kit. The block
+comes before the kit, so a page rule that only ties a kit rule's specificity loses; prefix it
+with `main` (`main h3 { … }`). Each concept is a token and a class:
 
 ```css
 --c-arrive: light-dark(oklch(54% 0.16 252), oklch(74% 0.12 252));

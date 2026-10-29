@@ -101,6 +101,8 @@ and exactly one predict box.
 </figure>
 ```
 
+- The two states are always named `before` and `after`: the runtime, the kit CSS and the
+  check know only those. Put the reader's words on the buttons, not in `data-state`.
 - The figure's `data-state` in the markup is what no-JS and print show; pick the state
   that makes the stronger point alone.
 - `.only-before` / `.only-after` fade; parts in both states stay. A label that differs

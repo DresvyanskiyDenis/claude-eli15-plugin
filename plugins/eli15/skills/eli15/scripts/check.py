@@ -169,8 +169,12 @@ def static_checks(src: str, allow_demo: bool) -> tuple[list[str], list[str], dic
     for tag in re.findall(r"<svg\b[^>]*>", src):
         if 'aria-hidden="true"' in tag:
             continue
-        if 'role="img"' not in tag or not re.search(r'aria-label="[^"]{12,}"', tag):
-            fails.append(f'svg without role="img" and a sentence-long aria-label: {tag[:80]}')
+        ref = re.search(r'aria-labelledby="([^"]+)"', tag)
+        named = bool(re.search(r'aria-label="[^"]{12,}"', tag)) or bool(
+            ref and all(f'id="{i}"' in src for i in ref.group(1).split()))
+        if 'role="img"' not in tag or not named:
+            fails.append(f'svg without role="img" and a sentence-long aria-label (or an aria-labelledby '
+                         f'naming existing ids): {tag[:80]}')
     for marker in ("ELI15 KIT", "ELI15 RUNTIME"):
         if marker not in src:
             fails.append(f"kit marker '{marker}' missing: copy the template's style and runtime blocks whole")
