@@ -4,6 +4,7 @@ Every version, dev or stable, adds one explain-diff page under `docs/explanation
 
 | Version | Channel | Date | Highlights | What changed |
 |---|---|---|---|---|
+| 0.1.0-alpha.1 | dev | 2026-10-29 | First plugin release: page kit (live model, stepper, toggle, predict box), ship check with screenshot tiles, Stop-hook gate | [explainer](explanations/2026-10-29-v0.1.0-alpha.1.html), [CHANGELOG](../plugins/eli15/CHANGELOG.md) |
 
 ## Cut a release
 
