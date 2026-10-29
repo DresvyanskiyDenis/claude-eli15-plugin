@@ -42,7 +42,9 @@ in dark.
 **Concepts** are defined per page in the `PAGE CONCEPTS and page CSS` block, the first
 block of the style. Any CSS rule of your own goes there too, never inside the kit. The block
 comes before the kit, so a page rule that only ties a kit rule's specificity loses; prefix it
-with `main` (`main h3 { … }`). Each concept is a token and a class:
+with `main` (`main h3 { … }`). A grid item of your own that holds a `<pre>` or a long
+unbroken token needs `min-width: 0`, or it grows to the code's width and the phone scrolls
+sideways. Each concept is a token and a class:
 
 ```css
 --c-arrive: light-dark(oklch(54% 0.16 252), oklch(74% 0.12 252));

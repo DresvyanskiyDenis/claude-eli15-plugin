@@ -69,7 +69,8 @@ Length follows the topic. Padding a small topic is the same failure as flattenin
    script. No café survives: the check fails on leftover demo words.
 5. **Draw.** Hero first, then each section's figure, choosing the pattern from the figure
    router in `visual-system.md` before drawing. Compute numbers in the `PAGE` script from
-   one `model()` function, so the prose, the readout and the chart cannot disagree.
+   one `model()` function, so the prose, the readout and the chart cannot disagree. No
+   quantity to drag? Drop `model()`; a stepper or a toggle is the interactive figure.
 6. **Check:** `uv run ${CLAUDE_SKILL_DIR}/scripts/check.py <out>.html`. Fix every FAIL;
    fix each WARN or say in the report why it stays. The plugin's stop hook runs the same
    check on every eli15 page you wrote and sends you back on a FAIL; it is the net, not

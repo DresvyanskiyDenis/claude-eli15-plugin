@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Changed
+
+- `SKILL.md`: a page with no quantity to drag drops `model()`; a stepper or a toggle is its
+  interactive figure.
+- `references/visual-system.md`: a page's own grid item that holds code needs `min-width: 0`,
+  or the phone scrolls sideways.
+
 ## 0.1.0-alpha.1
 
 First release as a plugin. Before this, eli15 was a standalone skill in Denis's `claude-config`.
