@@ -4,6 +4,7 @@ Every version, dev or stable, adds one explain-diff page under `docs/explanation
 
 | Version | Channel | Date | Highlights | What changed |
 |---|---|---|---|---|
+| 0.1.0-alpha.2 | dev | 2026-10-29 | Status hues kept 30° from concept hues, hidden toggle states skipped by screen readers, end-to-end gate test | [explainer](explanations/2026-10-29-v0.1.0-alpha.2.html), [CHANGELOG](../plugins/eli15/CHANGELOG.md) |
 | 0.1.0-alpha.1 | dev | 2026-10-29 | First plugin release: page kit (live model, stepper, toggle, predict box), ship check with screenshot tiles, Stop-hook gate | [explainer](explanations/2026-10-29-v0.1.0-alpha.1.html), [CHANGELOG](../plugins/eli15/CHANGELOG.md) |
 
 ## Cut a release

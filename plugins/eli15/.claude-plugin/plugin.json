@@ -1,6 +1,6 @@
 {
   "name": "eli15",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
   "description": "Explain any topic as one self-contained, interactive HTML page: a live model to drag, step-through diagrams, before/after toggles, a predict-then-reveal question, concept colours, with a headless-Chrome ship check that a stop hook runs before Claude finishes.",
   "author": {
     "name": "DresvyanskiyDenis",
