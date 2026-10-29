@@ -18,7 +18,7 @@ works on a phone, in dark mode, with reduced motion, without JavaScript and in p
 
 ![A finished eli15 page: a live queue model with a slider, the scene and its curve](plugins/eli15/skills/eli15/assets/reference-good.png)
 
-Status: pre-release (`0.1.0-alpha.1`). See the [CHANGELOG](plugins/eli15/CHANGELOG.md) and [releases](docs/releases.md).
+Status: pre-release (`0.1.0-alpha.2`). See the [CHANGELOG](plugins/eli15/CHANGELOG.md) and [releases](docs/releases.md).
 
 ## Install
 
